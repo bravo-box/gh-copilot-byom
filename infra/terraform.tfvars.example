@@ -7,15 +7,15 @@
 
 resource_group_name = "rg-byom-dev"
 
-# Paste the *contents* of your public key (e.g. ~/.ssh/id_rsa.pub)
-ssh_public_key = "ssh-rsa AAAA...your-public-key here..."
+# Windows VM administrator password (for RDP access via Bastion)
+admin_password = "YourSecurePassword123!"
 
 # ---------------------------------------------------------------------------
 # Optional – override defaults as needed
 # ---------------------------------------------------------------------------
 
 prefix   = "byom"
-location = "eastus"
+location = "usgovarizona"
 
 # Tags applied to every resource
 tags = {
@@ -54,3 +54,6 @@ admin_username = "azureuser"
 
 # Capacity in thousands of tokens-per-minute (TPM)
 gpt4o_deployment_capacity = 10
+
+
+block_internet_outbound = true
