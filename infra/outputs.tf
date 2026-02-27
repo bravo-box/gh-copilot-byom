@@ -59,10 +59,10 @@ output "openai_endpoint" {
   value       = module.ai_foundry.openai_endpoint
 }
 
-output "gpt4o_deployment_name" {
-  description = "Name of the GPT-4o model deployment."
-  value       = module.ai_foundry.gpt4o_deployment_name
-}
+# output "gpt4o_deployment_name" {
+#   description = "Name of the GPT-4o model deployment."
+#   value       = module.ai_foundry.gpt4o_deployment_name
+# }
 
 output "ai_foundry_id" {
   description = "Resource ID of the AI Foundry Hub."

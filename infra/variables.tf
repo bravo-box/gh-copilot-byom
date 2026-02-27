@@ -14,9 +14,9 @@ variable "prefix" {
 }
 
 variable "location" {
-  description = "Azure region in which to deploy all resources (e.g. 'eastus')."
+  description = "Azure Government region in which to deploy all resources (e.g. 'usgovarizona', 'usgovvirginia')."
   type        = string
-  default     = "eastus"
+  default     = "usgovarizona"
 }
 
 variable "resource_group_name" {
@@ -72,6 +72,12 @@ variable "bastion_subnet_cidr" {
   default     = "10.0.255.0/27"
 }
 
+variable "block_internet_outbound" {
+  description = "When set to true, NSG rules are applied to block virtual machines from reaching the public internet."
+  type        = bool
+  default     = false
+}
+
 # ---------------------------------------------------------------------------
 # Data Science VM configuration
 # ---------------------------------------------------------------------------
@@ -88,8 +94,8 @@ variable "admin_username" {
   default     = "azureuser"
 }
 
-variable "ssh_public_key" {
-  description = "Contents of the SSH public key used to authenticate to the Data Science VM."
+variable "admin_password" {
+  description = "Administrator password for the Windows Data Science VM."
   type        = string
   sensitive   = true
 }
