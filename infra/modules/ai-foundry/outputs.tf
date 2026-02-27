@@ -8,10 +8,10 @@ output "openai_id" {
   value       = azurerm_cognitive_account.openai.id
 }
 
-output "gpt4o_deployment_name" {
-  description = "Name of the GPT-4o model deployment."
-  value       = azurerm_cognitive_deployment.gpt4o.name
-}
+# output "gpt4o_deployment_name" {
+#   description = "Name of the GPT-4o model deployment."
+#   value       = azurerm_cognitive_deployment.gpt4o.name
+# }
 
 output "ai_foundry_id" {
   description = "Resource ID of the AI Foundry Hub."

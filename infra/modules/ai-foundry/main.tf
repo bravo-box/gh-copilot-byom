@@ -12,12 +12,14 @@ resource "random_string" "suffix" {
 # Storage account – used by AI Foundry for experiment artifacts
 resource "azurerm_storage_account" "ai_foundry" {
   # Storage account names: 3-24 lowercase alphanumeric characters
-  name                     = "${replace(var.prefix, "-", "")}st${random_string.suffix.result}"
-  resource_group_name      = var.resource_group_name
-  location                 = var.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  tags                     = var.tags
+  name                      = "${replace(var.prefix, "-", "")}st${random_string.suffix.result}"
+  resource_group_name       = var.resource_group_name
+  location                  = var.location
+  account_tier              = "Standard"
+  account_replication_type  = "LRS"
+  shared_access_key_enabled = false
+  tags                      = var.tags
+
 }
 
 # Key Vault – stores secrets/keys for AI Foundry
@@ -46,21 +48,21 @@ resource "azurerm_cognitive_account" "openai" {
 }
 
 # GPT-4o model deployment
-resource "azurerm_cognitive_deployment" "gpt4o" {
-  name                 = "gpt-4o"
-  cognitive_account_id = azurerm_cognitive_account.openai.id
+# resource "azurerm_cognitive_deployment" "gpt4o" {
+#   name                 = "gpt-4o"
+#   cognitive_account_id = azurerm_cognitive_account.openai.id
 
-  model {
-    format  = "OpenAI"
-    name    = "gpt-4o"
-    version = "2024-08-06"
-  }
+#   model {
+#     format  = "OpenAI"
+#     name    = "gpt-4o"
+#     version = "2024-08-06"
+#   }
 
-  sku {
-    name     = "GlobalStandard"
-    capacity = var.gpt4o_capacity
-  }
-}
+#   sku {
+#     name     = "GlobalStandard"
+#     capacity = var.gpt4o_capacity
+#   }
+# }
 
 # ---------------------------------------------------------------------------
 # Azure AI Foundry Hub
