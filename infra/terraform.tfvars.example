@@ -1,0 +1,56 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# Only variables without defaults are strictly required.
+
+# ---------------------------------------------------------------------------
+# Required
+# ---------------------------------------------------------------------------
+
+resource_group_name = "rg-byom-dev"
+
+# Paste the *contents* of your public key (e.g. ~/.ssh/id_rsa.pub)
+ssh_public_key = "ssh-rsa AAAA...your-public-key here..."
+
+# ---------------------------------------------------------------------------
+# Optional – override defaults as needed
+# ---------------------------------------------------------------------------
+
+prefix   = "byom"
+location = "eastus"
+
+# Tags applied to every resource
+tags = {
+  project     = "gh-copilot-byom"
+  environment = "dev"
+  managed_by  = "terraform"
+}
+
+# ---------------------------------------------------------------------------
+# Network
+# ---------------------------------------------------------------------------
+
+# Leave vnet_id empty ("") to have Terraform create a brand-new VNet.
+# Set it to an existing VNet resource ID to reuse an existing network.
+# Example:
+#   vnet_id = "/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.Network/virtualNetworks/<name>"
+vnet_id = ""
+
+vnet_address_space     = "10.0.0.0/16"
+dev_vms_subnet_cidr    = "10.0.1.0/24"
+ai_foundry_subnet_cidr = "10.0.2.0/24"
+
+# AzureBastionSubnet must be at least /26
+bastion_subnet_cidr = "10.0.255.0/27"
+
+# ---------------------------------------------------------------------------
+# Data Science VM
+# ---------------------------------------------------------------------------
+
+vm_size        = "Standard_DS3_v2"
+admin_username = "azureuser"
+
+# ---------------------------------------------------------------------------
+# AI Foundry / OpenAI
+# ---------------------------------------------------------------------------
+
+# Capacity in thousands of tokens-per-minute (TPM)
+gpt4o_deployment_capacity = 10
