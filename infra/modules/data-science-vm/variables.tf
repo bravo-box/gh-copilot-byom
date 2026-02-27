@@ -30,8 +30,8 @@ variable "admin_username" {
   default     = "azureuser"
 }
 
-variable "ssh_public_key" {
-  description = "Contents of the SSH public key for VM authentication."
+variable "admin_password" {
+  description = "Administrator password for the Windows VM."
   type        = string
   sensitive   = true
 }
