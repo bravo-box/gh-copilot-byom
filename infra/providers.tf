@@ -14,6 +14,9 @@ terraform {
 }
 
 provider "azurerm" {
+  # Configure for Azure Government environment
+  environment = "usgovernment"
+
   features {
     key_vault {
       purge_soft_delete_on_destroy = true
