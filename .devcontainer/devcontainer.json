@@ -1,0 +1,31 @@
+{
+	"name": "Terraform with Azure CLI",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"hashicorp.terraform",
+				"ms-vscode.azure-account",
+				"ms-azuretools.vscode-azureterraform",
+				"GitHub.copilot-chat"
+			],
+			"settings": {
+				"[terraform]": {
+					"editor.defaultFormatter": "hashicorp.terraform",
+					"editor.formatOnSave": true
+				},
+				"[json]": {
+					"editor.defaultFormatter": "esbenp.prettier-vscode"
+				}
+			}
+		}
+	},
+	"postCreateCommand": "terraform version && az --version",
+	"remoteUser": "vscode"
+}
