@@ -40,6 +40,12 @@ variable "bastion_subnet_cidr" {
   type        = string
 }
 
+variable "block_internet_outbound" {
+  description = "When set to true, NSG rules are applied to block outbound internet traffic from VMs."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Resource tags."
   type        = map(string)
