@@ -1,0 +1,37 @@
+# -----------------------------------------------------------------------
+# terraform.tfvars.example
+#
+# Copy this file to terraform.tfvars, fill in required values, and run:
+#   ./scripts/deploy.sh -f infra/terraform.tfvars
+#
+# Before the first deploy, accept the Windows DSVM marketplace image terms
+# once per subscription:
+#   az vm image terms accept \
+#     --publisher microsoft-dsvm \
+#     --offer     dsvm-win-2022 \
+#     --plan      winserver-2022
+#
+# For Azure Government auth, ensure the following env vars are set:
+#   export ARM_ENVIRONMENT=usgovernment
+#   export ARM_SUBSCRIPTION_ID=<your-subscription-id>
+#   export ARM_TENANT_ID=<your-tenant-id>
+#   export ARM_CLIENT_ID=<your-service-principal-app-id>       # if using SP
+#   export ARM_CLIENT_SECRET=<your-service-principal-secret>   # if using SP
+# -----------------------------------------------------------------------
+
+# Required – lowercase letters, numbers, and hyphens only (no spaces)
+project_name = "myproject"
+
+# Optional – defaults to usgovarizona
+# location = "usgovarizona"
+
+# Windows Data Science VM credentials
+vm_admin_username = "dsadmin"
+vm_admin_password = "CHANGE_ME_SuperSecure1!"   # must meet Azure complexity rules
+
+# Optional overrides
+# vm_size                  = "Standard_DS3_v2"
+# aoai_sku                 = "S0"
+# gpt52_deployment_name    = "gpt-52"
+# gpt52_capacity           = 10
+# storage_replication_type = "LRS"
