@@ -46,11 +46,11 @@ A starter repository that provisions an isolated Azure environment for using **B
 ### 1 – Create the Resource Group
 
 ```bash
-# defaults: name=rg-byom-dev, location=eastus
+# defaults: name=rg-byom-dev, location=usgovarizona
 ./scripts/create_rg.sh
 
 # custom name / region
-./scripts/create_rg.sh -g rg-byom-prod -l westus2
+./scripts/create_rg.sh -g rg-byom-prod -l usgovarizona
 ```
 
 ### 2 – Configure variables
