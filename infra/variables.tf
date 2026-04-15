@@ -38,6 +38,12 @@ variable "subnet_bastion_prefix" {
   default     = "10.0.3.0/27"
 }
 
+variable "subnet_storage_prefix" {
+  description = "CIDR prefix for the storage private endpoint subnet."
+  type        = string
+  default     = "10.0.4.0/24"
+}
+
 variable "vm_size" {
   description = "SKU size for the Windows Data Science VM."
   type        = string

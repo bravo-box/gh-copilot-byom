@@ -42,8 +42,23 @@ resource "azurerm_subnet" "aoai" {
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = [var.subnet_aoai_prefix]
 
+  private_endpoint_network_policies_enabled = false
+
   service_endpoints = [
     "Microsoft.CognitiveServices",
+    "Microsoft.Storage",
+  ]
+}
+
+resource "azurerm_subnet" "storage" {
+  name                 = "storage"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = [var.subnet_storage_prefix]
+
+  private_endpoint_network_policies_enabled = false
+
+  service_endpoints = [
     "Microsoft.Storage",
   ]
 }
@@ -283,7 +298,7 @@ resource "azurerm_private_endpoint" "aoai" {
   name                = "${var.project_name}-aoai-pe"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  subnet_id           = azurerm_subnet.virtual_machines.id
+  subnet_id           = azurerm_subnet.aoai.id
 
   private_service_connection {
     name                           = "${var.project_name}-aoai-psc"
@@ -305,7 +320,7 @@ resource "azurerm_private_endpoint" "blob" {
   name                = "${var.project_name}-blob-pe"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  subnet_id           = azurerm_subnet.virtual_machines.id
+  subnet_id           = azurerm_subnet.storage.id
 
   private_service_connection {
     name                           = "${var.project_name}-blob-psc"
