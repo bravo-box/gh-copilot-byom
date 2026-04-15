@@ -1,11 +1,16 @@
 $ErrorActionPreference = 'Stop'
 
-try {
-    Write-Host 'Installing GitHub CLI via winget...'
-    winget install --id GitHub.cli --source winget --accept-package-agreements --accept-source-agreements
+if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+    try {
+        Write-Host 'Installing GitHub CLI via winget...'
+        winget install --id GitHub.cli --source winget --accept-package-agreements --accept-source-agreements
+    }
+    catch {
+        throw "Failed to install GitHub CLI with winget. $_"
+    }
 }
-catch {
-    throw "Failed to install GitHub CLI with winget. $_"
+else {
+    Write-Host 'GitHub CLI already installed; skipping winget install.'
 }
 
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
