@@ -57,6 +57,59 @@ resource "azurerm_subnet" "bastion" {
 }
 
 # ---------------------------------------------------------------------------
+# Network Security Group – VM subnet (deny all outbound, allow Bastion in)
+# ---------------------------------------------------------------------------
+resource "azurerm_network_security_group" "vm" {
+  name                = "${var.project_name}-vm-nsg"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  # Allow inbound RDP from Bastion subnet
+  security_rule {
+    name                       = "AllowBastionRDP"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = var.subnet_bastion_prefix
+    destination_address_prefix = "*"
+  }
+
+  # Allow inbound SSH from Bastion subnet
+  security_rule {
+    name                       = "AllowBastionSSH"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = var.subnet_bastion_prefix
+    destination_address_prefix = "*"
+  }
+
+  # Deny all outbound traffic
+  security_rule {
+    name                       = "DenyAllOutbound"
+    priority                   = 4096
+    direction                  = "Outbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "vm" {
+  subnet_id                 = azurerm_subnet.virtual_machines.id
+  network_security_group_id = azurerm_network_security_group.vm.id
+}
+
+# ---------------------------------------------------------------------------
 # Azure Bastion
 # ---------------------------------------------------------------------------
 resource "azurerm_public_ip" "bastion" {
@@ -194,4 +247,75 @@ resource "azurerm_role_assignment" "storage_blob_contributor" {
   scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = data.azurerm_client_config.current.object_id
+}
+
+# ---------------------------------------------------------------------------
+# Private DNS Zones (Azure Government endpoints)
+# ---------------------------------------------------------------------------
+resource "azurerm_private_dns_zone" "cognitiveservices" {
+  name                = "privatelink.cognitiveservices.azure.us"
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+resource "azurerm_private_dns_zone" "blob" {
+  name                = "privatelink.blob.core.usgovcloudapi.net"
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "cognitiveservices" {
+  name                  = "${var.project_name}-aoai-dns-link"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.cognitiveservices.name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
+  name                  = "${var.project_name}-blob-dns-link"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.blob.name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
+}
+
+# ---------------------------------------------------------------------------
+# Private Endpoint – Azure OpenAI
+# ---------------------------------------------------------------------------
+resource "azurerm_private_endpoint" "aoai" {
+  name                = "${var.project_name}-aoai-pe"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  subnet_id           = azurerm_subnet.virtual_machines.id
+
+  private_service_connection {
+    name                           = "${var.project_name}-aoai-psc"
+    private_connection_resource_id = azurerm_cognitive_account.aoai.id
+    subresource_names              = ["account"]
+    is_manual_connection           = false
+  }
+
+  private_dns_zone_group {
+    name                 = "aoai-dns-zone-group"
+    private_dns_zone_ids = [azurerm_private_dns_zone.cognitiveservices.id]
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Private Endpoint – Blob Storage
+# ---------------------------------------------------------------------------
+resource "azurerm_private_endpoint" "blob" {
+  name                = "${var.project_name}-blob-pe"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  subnet_id           = azurerm_subnet.virtual_machines.id
+
+  private_service_connection {
+    name                           = "${var.project_name}-blob-psc"
+    private_connection_resource_id = azurerm_storage_account.storage.id
+    subresource_names              = ["blob"]
+    is_manual_connection           = false
+  }
+
+  private_dns_zone_group {
+    name                 = "blob-dns-zone-group"
+    private_dns_zone_ids = [azurerm_private_dns_zone.blob.id]
+  }
 }
