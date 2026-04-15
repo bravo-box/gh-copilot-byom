@@ -10,7 +10,7 @@ locals {
 # Resource Group
 # ---------------------------------------------------------------------------
 resource "azurerm_resource_group" "rg" {
-  name     = "${var.project_name}-rg"
+  name     = "${var.project_name}"
   location = var.location
 }
 
@@ -112,20 +112,11 @@ resource "azurerm_windows_virtual_machine" "vm" {
     storage_account_type = "Premium_LRS"
   }
 
-  # Windows Server 2022 Data Science VM marketplace image
-  # Accept marketplace terms once per subscription before first deploy:
-  #   az vm image terms accept --publisher microsoft-dsvm --offer dsvm-win-2022 --plan winserver-2022
   source_image_reference {
     publisher = "microsoft-dsvm"
     offer     = "dsvm-win-2022"
     sku       = "winserver-2022"
     version   = "latest"
-  }
-
-  plan {
-    name      = "winserver-2022"
-    publisher = "microsoft-dsvm"
-    product   = "dsvm-win-2022"
   }
 }
 
@@ -154,21 +145,26 @@ resource "azurerm_cognitive_account" "aoai" {
   }
 }
 
-resource "azurerm_cognitive_deployment" "gpt52" {
-  name                 = var.gpt52_deployment_name
+resource "azurerm_cognitive_deployment" "gpt51" {
+  name                 = var.gpt51_deployment_name
   cognitive_account_id = azurerm_cognitive_account.aoai.id
 
   model {
     format  = "OpenAI"
-    name    = "gpt-5.2"
-    version = "1"
+    name    = "gpt-5.1"
+    version = "2025-11-13"
   }
 
   scale {
-    type     = "Standard"
-    capacity = var.gpt52_capacity
+    type     = "DataZoneStandard"
+    capacity = var.gpt51_capacity
   }
 }
+
+# ---------------------------------------------------------------------------
+# Current client identity – used for RBAC on the storage account
+# ---------------------------------------------------------------------------
+data "azurerm_client_config" "current" {}
 
 # ---------------------------------------------------------------------------
 # Storage Account (shared-key / SAS auth disabled)
@@ -192,4 +188,10 @@ resource "azurerm_storage_account" "storage" {
       azurerm_subnet.aoai.id,
     ]
   }
+}
+
+resource "azurerm_role_assignment" "storage_blob_contributor" {
+  scope                = azurerm_storage_account.storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azurerm_client_config.current.object_id
 }

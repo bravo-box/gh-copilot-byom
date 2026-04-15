@@ -59,8 +59,8 @@ output "aoai_endpoint" {
 }
 
 output "aoai_deployment_name" {
-  description = "Name of the GPT-5.2 model deployment."
-  value       = azurerm_cognitive_deployment.gpt52.name
+  description = "Name of the GPT-5.1 model deployment."
+  value       = azurerm_cognitive_deployment.gpt51.name
 }
 
 output "storage_account_name" {
