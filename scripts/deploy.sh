@@ -7,7 +7,7 @@
 #
 # Options:
 #   -g, --resource-group  Resource group name        (default: rg-byom-dev)
-#   -l, --location        Azure region               (default: eastus)
+#   -l, --location        Azure region               (default: usgovarizona)
 #   -f, --vars-file       Path to a .tfvars file
 #   -a, --action          plan | apply | destroy     (default: apply)
 #       --auto-approve    Skip interactive confirmation
@@ -25,7 +25,7 @@ INFRA_DIR="${SCRIPT_DIR}/../infra"
 # Defaults
 # ---------------------------------------------------------------------------
 RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME:-rg-byom-dev}"
-LOCATION="${LOCATION:-eastus}"
+LOCATION="${LOCATION:-usgovarizona}"
 TF_VARS_FILE="${TF_VARS_FILE:-}"
 ACTION="${ACTION:-apply}"
 AUTO_APPROVE="${AUTO_APPROVE:-false}"
@@ -101,11 +101,13 @@ log "Infra directory    : ${INFRA_DIR}"
 TF_ARGS=()
 
 if [[ -n "${TF_VARS_FILE}" ]]; then
+  # Convert to absolute path before changing directories
+  TF_VARS_FILE="$(cd "$(dirname "${TF_VARS_FILE}")" && pwd)/$(basename "${TF_VARS_FILE}")"
   TF_ARGS+=("-var-file=${TF_VARS_FILE}")
 fi
 
 TF_ARGS+=(
-  "-var=resource_group_name=${RESOURCE_GROUP_NAME}"
+  "-var=project_name=${RESOURCE_GROUP_NAME}"
   "-var=location=${LOCATION}"
 )
 
