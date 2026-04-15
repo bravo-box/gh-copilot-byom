@@ -9,7 +9,7 @@ catch {
 }
 
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
-    throw "GitHub CLI (gh) was not found in PATH after installation. Open a new PowerShell session and run this script again."
+    throw "GitHub CLI (gh) was not found in PATH after installation. PATH may need to refresh. Open a new PowerShell session and run this script again."
 }
 
 try {
