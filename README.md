@@ -27,9 +27,11 @@ A starter repository that provisions an isolated Azure environment for using **B
 │       ├── bastion/              # Azure Bastion host + public IP
 │       ├── data-science-vm/      # Ubuntu DSVM
 │       └── ai-foundry/           # OpenAI (GPT-4o) + AI Foundry Hub
-└── scripts/
-    ├── create_rg.sh              # Create the Azure Resource Group
-    └── deploy.sh                 # terraform init + plan/apply/destroy
+├── scripts/
+│   ├── create_rg.sh              # Create the Azure Resource Group
+│   └── deploy.sh                 # terraform init + plan/apply/destroy
+└── vm-scripts/
+    └── install-github-copilot-cli-windows.ps1  # Install GitHub Copilot CLI on Windows
 ```
 
 ## Prerequisites
