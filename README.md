@@ -8,8 +8,8 @@ A starter repository that provisions an isolated Azure environment for using **B
 |---|---|
 | **Virtual Network** | New VNet (or reuse existing via `vnet_id`) with three subnets: `dev-vms`, `ai-foundry`, `AzureBastionSubnet` |
 | **Azure Bastion** | Managed bastion host + static public IP – lets you RDP/SSH to VMs without exposing them to the internet |
-| **Data Science VM** | Ubuntu 22.04 DSVM in the `dev-vms` subnet – pre-loaded with ML tooling (Python, Jupyter, CUDA, etc.) |
-| **Azure OpenAI** | Cognitive Services account with a **GPT-4o** model deployment |
+| **Windows Server 2022 VM** | Virtual Machine for Developers in the `dev-vms` subnet – pre-loaded with ML tooling (Python, Jupyter, CUDA, etc.) |
+| **Azure OpenAI** | Cognitive Services account with a **GPT-51** model deployment |
 | **AI Foundry Hub** | Azure AI Foundry Hub wired to the OpenAI service, backed by a Storage Account and Key Vault |
 
 ## Repository layout
@@ -27,7 +27,12 @@ A starter repository that provisions an isolated Azure environment for using **B
 │       ├── bastion/              # Azure Bastion host + public IP
 │       ├── data-science-vm/      # Ubuntu DSVM
 │       └── ai-foundry/           # OpenAI (GPT-4o) + AI Foundry Hub
+├── packer/
+│   ├── dsvm-copilot.pkr.hcl     # Packer template – Windows Server 2022 image
+│   └── scripts/
+│       └── install-vscode.ps1    # VS Code installer provisioner script
 ├── scripts/
+│   ├── build-image.sh            # Build the Packer VM image (wrapper)
 │   ├── create_rg.sh              # Create the Azure Resource Group
 │   └── deploy.sh                 # terraform init + plan/apply/destroy
 └── vm-scripts/
@@ -37,9 +42,22 @@ A starter repository that provisions an isolated Azure environment for using **B
 ## Prerequisites
 
 - [Terraform ≥ 1.5](https://developer.hashicorp.com/terraform/downloads)
+- [Packer ≥ 1.15.1](https://developer.hashicorp.com/packer/install)
 - [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) – logged in (`az login`)
 - An Azure subscription with **Contributor** rights
 - GPT-51 quota in your target region (request via [Azure OpenAI Studio](https://oai.azure.com/))
+
+## VS Code Tasks
+
+This repo includes pre-configured VS Code tasks (`.vscode/tasks.json`) so you can run common operations directly from the editor via **Terminal → Run Task** or `Ctrl+Shift+P` → **Tasks: Run Task**:
+
+| Task | Description |
+|---|---|
+| **Packer: Build Image** | Runs `build-image.sh` (prompts for the WinRM password) |
+| **Terraform: Create tfvars file** | Copies `terraform.tfvars.example` → `terraform.tfvars` |
+| **Terraform: Deploy - Plan** | Runs `deploy.sh -a plan` |
+| **Terraform: Deploy - Apply** | Runs `deploy.sh -a apply` |
+| **Terraform: Deploy - Destroy** | Runs `deploy.sh -a destroy` |
 
 ## Quick start
 
@@ -52,34 +70,47 @@ Currently we need to have a vm image with the following installed:
 - NodeJS
 - Github Copilot CLI
 
-If you want to install this on a base image you can build a vm image using the packer file here:
+**NOTE: This script can take a few minutes to run**
 
-TODO - Add steps to install packer
-
-```shell
-cd packer
-packer init .
-packer build \
-  -var communicator_password="YourP@ssw0rd!" \
-  dsvm-copilot.pkr.hcl
-```
-
-### 1 – Create the Resource Group
+The `build-image.sh` wrapper script handles `packer init`, `validate`, and `build` for you, with logging and pre-flight checks.
 
 ```bash
-# defaults: name=rg-byom-dev, location=usgovarizona
-./scripts/create_rg.sh
+# Using defaults (rg-byom-dev, usgovarizona, dsvm-copilot-image)
+./scripts/build-image.sh
 
-# custom name / region
-./scripts/create_rg.sh -g rg-byom-prod -l usgovarizona
+# Prompted for WinRM password, or pass it explicitly
+./scripts/build-image.sh -p "YourP@ssw0rd!"
+
+# Custom resource group, location, and image name
+./scripts/build-image.sh \
+  -g rg-byom-prod \
+  -l usgovarizona \
+  -n my-custom-image \
+  -p "YourP@ssw0rd!"
+
+# Enable debug logging
+./scripts/build-image.sh --debug -p "YourP@ssw0rd!"
 ```
+
+You can also set defaults via environment variables instead of flags:
+
+```bash
+export RESOURCE_GROUP_NAME=rg-byom-dev
+export LOCATION=usgovarizona
+export IMAGE_NAME=dsvm-copilot-image
+export VM_SIZE=Standard_DS3_v2
+export COMMUNICATOR_PASSWORD="YourP@ssw0rd!"
+./scripts/build-image.sh
+```
+
+Build logs are saved to `packer/logs/`.
 
 ### 2 – Configure variables
 
 ```bash
 cp infra/terraform.tfvars.example infra/terraform.tfvars
 # Edit infra/terraform.tfvars – at minimum set:
-#   resource_group_name  and  ssh_public_key
+#   resource_group_name
 ```
 
 ### 3 – Plan & apply
@@ -120,17 +151,6 @@ vnet_id = "/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.Netwo
 
 ```bash
 ./scripts/deploy.sh -f infra/terraform.tfvars -a destroy
-```
-
-## Accepting the DSVM marketplace image terms
-
-The Ubuntu DSVM is a paid marketplace image. Accept the terms **once per subscription** before the first deploy:
-
-```bash
-az vm image terms accept \
-  --publisher microsoft-dsvm \
-  --offer     ubuntu-2204 \
-  --plan      2204
 ```
 
 # Installing GitHub Copilot CLI
