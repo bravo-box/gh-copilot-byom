@@ -29,6 +29,9 @@ project_name = "myproject"
 vm_admin_username = "dsadmin"
 vm_admin_password = "CHANGE_ME_SuperSecure1!"   # must meet Azure complexity rules
 
+# Optional – use a custom Packer image instead of the marketplace DSVM
+# custom_vm_image_id = "/subscriptions/<sub-id>/resourceGroups/rg-byom-dev/providers/Microsoft.Compute/images/dsvm-copilot-image"
+
 # Optional overrides
 # vm_size                  = "Standard_DS3_v2"
 # aoai_sku                 = "S0"

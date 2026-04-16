@@ -80,6 +80,12 @@ variable "gpt51_capacity" {
   default     = 10
 }
 
+variable "custom_vm_image_id" {
+  description = "Resource ID of a custom managed image (built by Packer). When set, the VM uses this image instead of the marketplace DSVM image."
+  type        = string
+  default     = null
+}
+
 variable "storage_replication_type" {
   description = "Replication type for the storage account (LRS, ZRS, GRS, etc.)."
   type        = string

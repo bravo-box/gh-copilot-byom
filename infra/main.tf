@@ -180,11 +180,16 @@ resource "azurerm_windows_virtual_machine" "vm" {
     storage_account_type = "Premium_LRS"
   }
 
-  source_image_reference {
-    publisher = "microsoft-dsvm"
-    offer     = "dsvm-win-2022"
-    sku       = "winserver-2022"
-    version   = "latest"
+  source_image_id = var.custom_vm_image_id
+
+  dynamic "source_image_reference" {
+    for_each = var.custom_vm_image_id == null ? [1] : []
+    content {
+      publisher = "microsoft-dsvm"
+      offer     = "dsvm-win-2022"
+      sku       = "winserver-2022"
+      version   = "latest"
+    }
   }
 }
 
