@@ -131,45 +131,20 @@ build {
     script = "${path.root}/scripts/install-vscode.ps1"
   }
 
-  # Install Windows Terminal (download from GitHub – not pre-staged on Server 2022)
+  # Install Windows Terminal (via winget + Cascadia Mono font)
   provisioner "powershell" {
     inline = [
-      "Write-Host '>>> Installing Windows Terminal dependencies...'",
-      "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12",
-      "",
-      "function Download-WithRetry {",
-      "  param([string]$Url, [string]$OutFile, [int]$MaxRetries = 5, [int]$Delay = 15)",
-      "  for ($i = 1; $i -le $MaxRetries; $i++) {",
-      "    try {",
-      "      Write-Host \"  Downloading $OutFile (attempt $i of $MaxRetries)...\"",
-      "      Invoke-WebRequest -Uri $Url -OutFile $OutFile -UseBasicParsing",
-      "      return",
-      "    } catch {",
-      "      if ($i -eq $MaxRetries) { Write-Error \"Download failed after $MaxRetries attempts: $_\"; exit 1 }",
-      "      Write-Host \"  Download failed, retrying in $${Delay}s ...\"",
-      "      Start-Sleep -Seconds $Delay; $Delay *= 2",
-      "    }",
-      "  }",
-      "}",
-      "",
-      "# VCLibs dependency",
-      "$vcLibsUrl = 'https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx'",
-      "Download-WithRetry -Url $vcLibsUrl -OutFile \"$Env:TEMP\\vclibs.appx\"",
-      "Add-AppxPackage -Path \"$Env:TEMP\\vclibs.appx\"",
-      "",
-      "# Microsoft.UI.Xaml dependency",
-      "$xamlUrl = 'https://github.com/nicool/microsoft.ui.xaml/releases/download/winui2/Microsoft.UI.Xaml.2.8.appx'",
-      "Download-WithRetry -Url $xamlUrl -OutFile \"$Env:TEMP\\ui-xaml.appx\"",
-      "Add-AppxPackage -Path \"$Env:TEMP\\ui-xaml.appx\"",
-      "",
-      "# Windows Terminal",
+      "Write-Host '>>> Installing Chocolatey...'",
+      "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))",
+      "Write-Host '>>> Enable Global Confirmation...'",
+      "choco feature enable -n allowGlobalConfirmation"
+    ]
+  }
+
+  provisioner "powershell" {
+    inline = [
       "Write-Host '>>> Installing Windows Terminal...'",
-      "$termUrl = 'https://github.com/microsoft/terminal/releases/download/v1.21.3231.0/Microsoft.WindowsTerminal_1.21.3231.0_8wekyb3d8bbwe.msixbundle'",
-      "Download-WithRetry -Url $termUrl -OutFile \"$Env:TEMP\\terminal.msixbundle\"",
-      "Add-AppxPackage -Path \"$Env:TEMP\\terminal.msixbundle\"",
-      "",
-      "Remove-Item \"$Env:TEMP\\vclibs.appx\", \"$Env:TEMP\\ui-xaml.appx\", \"$Env:TEMP\\terminal.msixbundle\" -Force -ErrorAction SilentlyContinue",
-      "Write-Host '>>> Windows Terminal installed.'",
+      "choco install microsoft-windows-terminal"
     ]
   }
 
