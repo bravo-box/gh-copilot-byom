@@ -127,5 +127,24 @@ log "Running: terraform ${ACTION}"
 terraform "${ACTION}" "${TF_ARGS[@]}"
 
 if [[ "${ACTION}" == "apply" ]]; then
-  log "Deployment complete. Run 'terraform output' in the infra/ directory to see resource details."
+  log "Deployment complete. Retrieving Copilot configuration..."
+
+  AOAI_ENDPOINT=$(terraform output -raw aoai_endpoint)
+  AOAI_KEY=$(terraform output -raw aoai_primary_key)
+  AOAI_DEPLOYMENT=$(terraform output -raw aoai_deployment_name)
+
+  echo ""
+  echo "# -----------------------------------------------------------------------"
+  echo "# GitHub Copilot BYOM – paste these into your bash terminal"
+  echo "# -----------------------------------------------------------------------"
+  echo "export COPILOT_PROVIDER_BASE_URL=${AOAI_ENDPOINT}"
+  echo "export COPILOT_PROVIDER_TYPE=azure"
+  echo "export COPILOT_PROVIDER_API_KEY=${AOAI_KEY}"
+  echo "export COPILOT_MODEL=${AOAI_DEPLOYMENT}"
+  echo "export COPILOT_WIRE_MODEL=${AOAI_DEPLOYMENT}"
+  echo "export COPILOT_OFFLINE=true"
+  echo "export COPILOT_PROVIDER_MAX_PROMPT_TOKENS=128000"
+  echo "export COPILOT_PROVIDER_MAX_OUTPUT_TOKENS=4096"
+  echo "export COPILOT_PROVIDER_WIRE_API=responses"
+  echo "# -----------------------------------------------------------------------"
 fi

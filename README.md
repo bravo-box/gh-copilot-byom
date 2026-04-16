@@ -112,6 +112,35 @@ az vm image terms accept \
   --plan      2204
 ```
 
+# Installing GitHub Copilot CLI
+
+To install Github Copilot install with the following command:
+
+```
+npm install -g @github/copilot
+```
+
+# Running Github Copilot CLI
+
+Run the following configuration for Github Copilot CLI:
+
+```
+export COPILOT_PROVIDER_BASE_URL=https://__YOUR_AOAI_RESOURCE__.openai.azure.us
+export COPILOT_PROVIDER_TYPE=azure
+export COPILOT_PROVIDER_API_KEY=__YOUR_KEY_HERE__
+export COPILOT_MODEL=gpt-51
+export COPILOT_WIRE_MODEL=gpt-51
+export COPILOT_OFFLINE=true
+export COPILOT_PROVIDER_MAX_PROMPT_TOKENS=128000
+export COPILOT_PROVIDER_MAX_OUTPUT_TOKENS=4096
+export COPILOT_PROVIDER_WIRE_API=responses
+```
+Then can start the CLI with the following:
+
+```
+copilot
+```
+
 ## License
 
 [MIT](LICENSE)

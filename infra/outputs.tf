@@ -58,6 +58,12 @@ output "aoai_endpoint" {
   value       = azurerm_cognitive_account.aoai.endpoint
 }
 
+output "aoai_primary_key" {
+  description = "Primary access key for the Azure OpenAI instance."
+  value       = azurerm_cognitive_account.aoai.primary_access_key
+  sensitive   = true
+}
+
 output "aoai_deployment_name" {
   description = "Name of the GPT-5.1 model deployment."
   value       = azurerm_cognitive_deployment.gpt51.name
