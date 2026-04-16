@@ -26,7 +26,7 @@ LOG_DIR="${SCRIPT_DIR}/../packer/logs"
 # ---------------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------------
-RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME:-rg-byom-dev}"
+RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME:-rg-byom-dev-vm-images}"
 LOCATION="${LOCATION:-usgovarizona}"
 IMAGE_NAME="${IMAGE_NAME:-dsvm-copilot-image}"
 VM_SIZE="${VM_SIZE:-Standard_DS3_v2}"
@@ -124,10 +124,11 @@ if [[ -z "${COMMUNICATOR_PASSWORD}" ]]; then
   fi
 fi
 
-# Verify the resource group exists
+# Create the resource group if it doesn't exist
 if ! az group show --name "${RESOURCE_GROUP_NAME}" &>/dev/null; then
-  err "Resource group '${RESOURCE_GROUP_NAME}' does not exist. Create it first with ./scripts/create_rg.sh"
-  exit 1
+  log "Resource group '${RESOURCE_GROUP_NAME}' not found – creating in ${LOCATION}..."
+  az group create --name "${RESOURCE_GROUP_NAME}" --location "${LOCATION}" --output none
+  log "Resource group '${RESOURCE_GROUP_NAME}' created."
 fi
 
 # ---------------------------------------------------------------------------

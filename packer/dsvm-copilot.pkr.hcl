@@ -29,7 +29,7 @@ variable "location" {
 
 variable "resource_group_name" {
   type        = string
-  default     = "rg-byom-dev"
+  default     = "rg-byom-dev-vm-images"
   description = "Resource group where the managed image will be stored."
 }
 
