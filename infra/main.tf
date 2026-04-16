@@ -105,9 +105,9 @@ resource "azurerm_network_security_group" "vm" {
     destination_address_prefix = "*"
   }
 
-  # Deny all outbound traffic
+  # Deny outbound Internet traffic
   security_rule {
-    name                       = "DenyAllOutbound"
+    name                       = "DenyInternetOutbound"
     priority                   = 4096
     direction                  = "Outbound"
     access                     = "Deny"
@@ -115,7 +115,7 @@ resource "azurerm_network_security_group" "vm" {
     source_port_range          = "*"
     destination_port_range     = "*"
     source_address_prefix      = "*"
-    destination_address_prefix = "*"
+    destination_address_prefix = "Internet"
   }
 }
 
@@ -268,7 +268,7 @@ resource "azurerm_role_assignment" "storage_blob_contributor" {
 # Private DNS Zones (Azure Government endpoints)
 # ---------------------------------------------------------------------------
 resource "azurerm_private_dns_zone" "cognitiveservices" {
-  name                = "privatelink.cognitiveservices.azure.us"
+  name                = "privatelink.openai.azure.us"
   resource_group_name = azurerm_resource_group.rg.name
 }
 
