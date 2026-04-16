@@ -1,0 +1,112 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Packer: Build Image",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "./scripts/build-image.sh",
+        "-p",
+        "${input:communicatorPassword}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Terraform: Create tfvars file",
+      "type": "shell",
+      "command": "cp",
+      "args": [
+        "infra/terraform.tfvars.example",
+        "infra/terraform.tfvars"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Terraform: Deploy - Plan",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "./scripts/deploy.sh",
+        "-f",
+        "infra/terraform.tfvars",
+        "-a",
+        "plan"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Terraform: Deploy - Apply",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "./scripts/deploy.sh",
+        "-f",
+        "infra/terraform.tfvars",
+        "-a",
+        "apply"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Terraform: Deploy - Destroy",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "./scripts/deploy.sh",
+        "-f",
+        "infra/terraform.tfvars",
+        "-a",
+        "destroy"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "communicatorPassword",
+      "type": "promptString",
+      "description": "WinRM password for the Packer build VM",
+      "password": true
+    }
+  ]
+}
