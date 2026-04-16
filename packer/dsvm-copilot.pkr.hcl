@@ -161,16 +161,26 @@ build {
   }
 
   # Configure VS Code to use Git Bash as the default terminal
+  # Write to both the current user and the Default User profile so new
+  # users created after Sysprep inherit the setting automatically.
   provisioner "powershell" {
     inline = [
       "Write-Host '>>> Configuring VS Code default terminal to Git Bash...'",
-      "$settingsDir = \"$Env:APPDATA\\Code\\User\"",
-      "New-Item -ItemType Directory -Path $settingsDir -Force | Out-Null",
       "$settings = @{",
       "  'terminal.integrated.defaultProfile.windows' = 'Git Bash'",
       "} | ConvertTo-Json",
-      "Set-Content -Path \"$settingsDir\\settings.json\" -Value $settings -Encoding UTF8",
-      "Write-Host '>>> VS Code settings written.'",
+      "",
+      "# Current build user",
+      "$currentDir = \"$Env:APPDATA\\Code\\User\"",
+      "New-Item -ItemType Directory -Path $currentDir -Force | Out-Null",
+      "Set-Content -Path \"$currentDir\\settings.json\" -Value $settings -Encoding UTF8",
+      "Write-Host \">>> Written to $currentDir\\settings.json\"",
+      "",
+      "# Default User profile (inherited by all new users after Sysprep)",
+      "$defaultDir = 'C:\\Users\\Default\\AppData\\Roaming\\Code\\User'",
+      "New-Item -ItemType Directory -Path $defaultDir -Force | Out-Null",
+      "Set-Content -Path \"$defaultDir\\settings.json\" -Value $settings -Encoding UTF8",
+      "Write-Host \">>> Written to $defaultDir\\settings.json\"",
     ]
   }
 
@@ -194,6 +204,17 @@ build {
       "Write-Host '>>> npm global prefix:' (npm prefix -g)",
       "Write-Host '>>> Copilot CLI version:'",
       "copilot --version",
+      "",
+      "# Add npm global bin directory to the SYSTEM PATH so it survives Sysprep",
+      "$npmGlobalBin = (npm prefix -g)",
+      "Write-Host \">>> Adding npm global bin to system PATH: $npmGlobalBin\"",
+      "$machinePath = [System.Environment]::GetEnvironmentVariable('Path', 'Machine')",
+      "if ($machinePath -notlike \"*$npmGlobalBin*\") {",
+      "  [System.Environment]::SetEnvironmentVariable('Path', \"$machinePath;$npmGlobalBin\", 'Machine')",
+      "  Write-Host '>>> System PATH updated.'",
+      "} else {",
+      "  Write-Host '>>> npm global bin already in system PATH.'",
+      "}",
     ]
   }
 
