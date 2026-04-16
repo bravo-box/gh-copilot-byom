@@ -191,6 +191,22 @@ echo ""
 if [[ ${BUILD_EXIT} -eq 0 ]]; then
   log "Image built successfully in $(( BUILD_DURATION / 60 ))m $(( BUILD_DURATION % 60 ))s."
   log "Image: ${IMAGE_NAME} in resource group ${RESOURCE_GROUP_NAME}"
+
+  # -------------------------------------------------------------------------
+  # Update terraform.tfvars with the custom image ID (if file exists)
+  # -------------------------------------------------------------------------
+  TFVARS_FILE="${SCRIPT_DIR}/../infra/terraform.tfvars"
+  if [[ -f "${TFVARS_FILE}" ]]; then
+    IMAGE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/images/${IMAGE_NAME}"
+    if grep -q '^[[:space:]]*#\?[[:space:]]*custom_vm_image_id' "${TFVARS_FILE}"; then
+      # Replace existing (commented or uncommented) line
+      sed -i "s|^[[:space:]]*#\?[[:space:]]*custom_vm_image_id.*|custom_vm_image_id = \"${IMAGE_ID}\"|" "${TFVARS_FILE}"
+    else
+      # Append to file
+      printf '\ncustom_vm_image_id = "%s"\n' "${IMAGE_ID}" >> "${TFVARS_FILE}"
+    fi
+    log "Updated ${TFVARS_FILE} with custom_vm_image_id"
+  fi
 else
   err "packer build failed after $(( BUILD_DURATION / 60 ))m $(( BUILD_DURATION % 60 ))s."
   exit ${BUILD_EXIT}
