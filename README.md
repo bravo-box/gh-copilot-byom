@@ -135,6 +135,13 @@ export COPILOT_PROVIDER_MAX_PROMPT_TOKENS=128000
 export COPILOT_PROVIDER_MAX_OUTPUT_TOKENS=4096
 export COPILOT_PROVIDER_WIRE_API=responses
 ```
+
+If you want to save this configuration, do so by running:
+
+```
+source ~/.bashrc
+```
+
 Then can start the CLI with the following:
 
 ```

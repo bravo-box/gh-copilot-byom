@@ -147,4 +147,5 @@ if [[ "${ACTION}" == "apply" ]]; then
   echo "export COPILOT_PROVIDER_MAX_OUTPUT_TOKENS=4096"
   echo "export COPILOT_PROVIDER_WIRE_API=responses"
   echo "# -----------------------------------------------------------------------"
+  echo "To save this configuration file, run 'source ~/.bashrc'"
 fi
