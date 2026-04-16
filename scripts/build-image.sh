@@ -43,8 +43,16 @@ print_usage() {
 log()  { printf "[%s] %s\n" "$(date -u +%H:%M:%SZ)" "$*"; }
 err()  { log "ERROR: $*" >&2; }
 
+PACKER_PID=""
+
 cleanup() {
   local exit_code=$?
+  # Kill packer if it's still running
+  if [[ -n "${PACKER_PID}" ]] && kill -0 "${PACKER_PID}" 2>/dev/null; then
+    log "Terminating packer (PID ${PACKER_PID})..."
+    kill -TERM "${PACKER_PID}" 2>/dev/null
+    wait "${PACKER_PID}" 2>/dev/null || true
+  fi
   if [[ ${exit_code} -ne 0 ]]; then
     err "Build failed with exit code ${exit_code}."
     if [[ -f "${LOG_FILE:-}" ]]; then
@@ -57,6 +65,12 @@ cleanup() {
   exit "${exit_code}"
 }
 trap cleanup EXIT
+
+handle_interrupt() {
+  err "Interrupted by user."
+  exit 130
+}
+trap handle_interrupt INT TERM
 
 # ---------------------------------------------------------------------------
 # Argument parsing
@@ -181,9 +195,12 @@ env "${PACKER_ENV[@]+"${PACKER_ENV[@]}"}" \
     -var "image_name=${IMAGE_NAME}" \
     -var "vm_size=${VM_SIZE}" \
     -var "communicator_password=${COMMUNICATOR_PASSWORD}" \
-    "${PACKER_DIR}/dsvm-copilot.pkr.hcl" 2>&1 | tee -a "${LOG_FILE}"
+    "${PACKER_DIR}/dsvm-copilot.pkr.hcl" > >(tee -a "${LOG_FILE}") 2>&1 &
+PACKER_PID=$!
 
-BUILD_EXIT=${PIPESTATUS[0]}
+wait "${PACKER_PID}" 2>/dev/null
+BUILD_EXIT=$?
+PACKER_PID=""
 BUILD_END=$(date +%s)
 BUILD_DURATION=$(( BUILD_END - BUILD_START ))
 
