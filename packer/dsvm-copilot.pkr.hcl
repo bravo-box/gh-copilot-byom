@@ -149,15 +149,15 @@ build {
   }
 
   # Install the GitHub Copilot VS Code extension
-  provisioner "powershell" {
-    inline = [
-      "Write-Host '>>> Installing GitHub Copilot extension...'",
-      "$codePath = \"$Env:ProgramFiles\\Microsoft VS Code\\bin\\code.cmd\"",
-      "& $codePath --install-extension GitHub.copilot --force 2>&1 | Write-Host",
-      "& $codePath --install-extension GitHub.copilot-chat --force 2>&1 | Write-Host",
-      "Write-Host '>>> Extensions installed.'",
-    ]
-  }
+#   provisioner "powershell" {
+#     inline = [
+#       "Write-Host '>>> Installing GitHub Copilot extension...'",
+#       "$codePath = \"$Env:ProgramFiles\\Microsoft VS Code\\bin\\code.cmd\"",
+#       "& $codePath --install-extension GitHub.copilot --force 2>&1 | Write-Host",
+#       "& $codePath --install-extension GitHub.copilot-chat --force 2>&1 | Write-Host",
+#       "Write-Host '>>> Extensions installed.'",
+#     ]
+#   }
 
   # Install GitHub Copilot CLI
   provisioner "powershell" {
