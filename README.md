@@ -39,9 +39,30 @@ A starter repository that provisions an isolated Azure environment for using **B
 - [Terraform ≥ 1.5](https://developer.hashicorp.com/terraform/downloads)
 - [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) – logged in (`az login`)
 - An Azure subscription with **Contributor** rights
-- GPT-4o quota in your target region (request via [Azure OpenAI Studio](https://oai.azure.com/))
+- GPT-51 quota in your target region (request via [Azure OpenAI Studio](https://oai.azure.com/))
 
 ## Quick start
+
+### 1 - Run Packer to build Dev VM image
+
+Currently we need to have a vm image with the following installed:
+
+- VSCode
+- Terminal
+- NodeJS
+- Github Copilot CLI
+
+If you want to install this on a base image you can build a vm image using the packer file here:
+
+TODO - Add steps to install packer
+
+```shell
+cd packer
+packer init .
+packer build \
+  -var communicator_password="YourP@ssw0rd!" \
+  dsvm-copilot.pkr.hcl
+```
 
 ### 1 – Create the Resource Group
 
