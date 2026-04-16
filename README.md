@@ -53,8 +53,8 @@ This repo includes pre-configured VS Code tasks (`.vscode/tasks.json`) so you ca
 
 | Task | Description |
 |---|---|
-| **Packer: Build Image** | Runs `build-image.sh` (prompts for the WinRM password) |
 | **Terraform: Create tfvars file** | Copies `terraform.tfvars.example` → `terraform.tfvars` |
+| **Packer: Build Image** | Runs `build-image.sh` (prompts for the WinRM password) **NOTE: This can take up to 10 minutes to run.** |
 | **Terraform: Deploy - Plan** | Runs `deploy.sh -a plan` |
 | **Terraform: Deploy - Apply** | Runs `deploy.sh -a apply` |
 | **Terraform: Deploy - Destroy** | Runs `deploy.sh -a destroy` |
