@@ -131,7 +131,7 @@ build {
     script = "${path.root}/scripts/install-vscode.ps1"
   }
 
-  # Install Windows Terminal (via winget + Cascadia Mono font)
+  # Install Chocolatey package manager
   provisioner "powershell" {
     inline = [
       "Write-Host '>>> Installing Chocolatey...'",
@@ -141,10 +141,36 @@ build {
     ]
   }
 
+  # Install Git for Windows (provides Git Bash)
+  provisioner "powershell" {
+    inline = [
+      "Write-Host '>>> Installing Git for Windows (includes Git Bash)...'",
+      "choco install git --params '/GitAndUnixToolsOnPath /NoShellIntegration'",
+      "$Env:Path = [System.Environment]::GetEnvironmentVariable('Path', 'Machine')",
+      "Write-Host \"  git $(git --version)\"",
+      "Write-Host \"  bash at: $(where.exe bash)\"",
+    ]
+  }
+
+  # Install Windows Terminal
   provisioner "powershell" {
     inline = [
       "Write-Host '>>> Installing Windows Terminal...'",
       "choco install microsoft-windows-terminal"
+    ]
+  }
+
+  # Configure VS Code to use Git Bash as the default terminal
+  provisioner "powershell" {
+    inline = [
+      "Write-Host '>>> Configuring VS Code default terminal to Git Bash...'",
+      "$settingsDir = \"$Env:APPDATA\\Code\\User\"",
+      "New-Item -ItemType Directory -Path $settingsDir -Force | Out-Null",
+      "$settings = @{",
+      "  'terminal.integrated.defaultProfile.windows' = 'Git Bash'",
+      "} | ConvertTo-Json",
+      "Set-Content -Path \"$settingsDir\\settings.json\" -Value $settings -Encoding UTF8",
+      "Write-Host '>>> VS Code settings written.'",
     ]
   }
 

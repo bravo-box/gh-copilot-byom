@@ -26,7 +26,7 @@ LOG_DIR="${SCRIPT_DIR}/../packer/logs"
 # ---------------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------------
-G0RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME:-rg-byom-dev-vm-images}"
+RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME:-rg-byom-dev-vm-images}"
 LOCATION="${LOCATION:-usgovarizona}"
 IMAGE_NAME="${IMAGE_NAME:-dsvm-copilot-image}"
 VM_SIZE="${VM_SIZE:-Standard_DS3_v2}"
