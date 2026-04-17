@@ -196,6 +196,7 @@ env "${PACKER_ENV[@]+"${PACKER_ENV[@]}"}" \
     -var "image_name=${IMAGE_NAME}" \
     -var "vm_size=${VM_SIZE}" \
     -var "communicator_password=${COMMUNICATOR_PASSWORD}" \
+    --force \
     "${PACKER_DIR}/dsvm-copilot.pkr.hcl" > >(tee -a "${LOG_FILE}") 2>&1 &
 PACKER_PID=$!
 
