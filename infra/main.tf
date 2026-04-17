@@ -10,7 +10,7 @@ locals {
 # Resource Group
 # ---------------------------------------------------------------------------
 resource "azurerm_resource_group" "rg" {
-  name     = "${var.project_name}-rg"
+  name     = "${var.project_name}"
   location = var.location
 }
 
@@ -42,8 +42,23 @@ resource "azurerm_subnet" "aoai" {
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = [var.subnet_aoai_prefix]
 
+  private_endpoint_network_policies_enabled = false
+
   service_endpoints = [
     "Microsoft.CognitiveServices",
+    "Microsoft.Storage",
+  ]
+}
+
+resource "azurerm_subnet" "storage" {
+  name                 = "storage"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = [var.subnet_storage_prefix]
+
+  private_endpoint_network_policies_enabled = false
+
+  service_endpoints = [
     "Microsoft.Storage",
   ]
 }
@@ -54,6 +69,59 @@ resource "azurerm_subnet" "bastion" {
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = [var.subnet_bastion_prefix]
+}
+
+# ---------------------------------------------------------------------------
+# Network Security Group – VM subnet (deny all outbound, allow Bastion in)
+# ---------------------------------------------------------------------------
+resource "azurerm_network_security_group" "vm" {
+  name                = "${var.project_name}-vm-nsg"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  # Allow inbound RDP from Bastion subnet
+  security_rule {
+    name                       = "AllowBastionRDP"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = var.subnet_bastion_prefix
+    destination_address_prefix = "*"
+  }
+
+  # Allow inbound SSH from Bastion subnet
+  security_rule {
+    name                       = "AllowBastionSSH"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = var.subnet_bastion_prefix
+    destination_address_prefix = "*"
+  }
+
+  # Deny outbound Internet traffic
+  security_rule {
+    name                       = "DenyInternetOutbound"
+    priority                   = 4096
+    direction                  = "Outbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "Internet"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "vm" {
+  subnet_id                 = azurerm_subnet.virtual_machines.id
+  network_security_group_id = azurerm_network_security_group.vm.id
 }
 
 # ---------------------------------------------------------------------------
@@ -112,20 +180,16 @@ resource "azurerm_windows_virtual_machine" "vm" {
     storage_account_type = "Premium_LRS"
   }
 
-  # Windows Server 2022 Data Science VM marketplace image
-  # Accept marketplace terms once per subscription before first deploy:
-  #   az vm image terms accept --publisher microsoft-dsvm --offer dsvm-win-2022 --plan winserver-2022
-  source_image_reference {
-    publisher = "microsoft-dsvm"
-    offer     = "dsvm-win-2022"
-    sku       = "winserver-2022"
-    version   = "latest"
-  }
+  source_image_id = var.custom_vm_image_id
 
-  plan {
-    name      = "winserver-2022"
-    publisher = "microsoft-dsvm"
-    product   = "dsvm-win-2022"
+  dynamic "source_image_reference" {
+    for_each = var.custom_vm_image_id == null ? [1] : []
+    content {
+      publisher = "microsoft-dsvm"
+      offer     = "dsvm-win-2022"
+      sku       = "winserver-2022"
+      version   = "latest"
+    }
   }
 }
 
@@ -154,21 +218,26 @@ resource "azurerm_cognitive_account" "aoai" {
   }
 }
 
-resource "azurerm_cognitive_deployment" "gpt52" {
-  name                 = var.gpt52_deployment_name
+resource "azurerm_cognitive_deployment" "gpt51" {
+  name                 = var.gpt51_deployment_name
   cognitive_account_id = azurerm_cognitive_account.aoai.id
 
   model {
     format  = "OpenAI"
-    name    = "gpt-5.2"
-    version = "1"
+    name    = "gpt-5.1"
+    version = "2025-11-13"
   }
 
   scale {
-    type     = "Standard"
-    capacity = var.gpt52_capacity
+    type     = "DataZoneStandard"
+    capacity = var.gpt51_capacity
   }
 }
+
+# ---------------------------------------------------------------------------
+# Current client identity – used for RBAC on the storage account
+# ---------------------------------------------------------------------------
+data "azurerm_client_config" "current" {}
 
 # ---------------------------------------------------------------------------
 # Storage Account (shared-key / SAS auth disabled)
@@ -191,5 +260,82 @@ resource "azurerm_storage_account" "storage" {
       azurerm_subnet.virtual_machines.id,
       azurerm_subnet.aoai.id,
     ]
+  }
+}
+
+resource "azurerm_role_assignment" "storage_blob_contributor" {
+  scope                = azurerm_storage_account.storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
+# ---------------------------------------------------------------------------
+# Private DNS Zones (Azure Government endpoints)
+# ---------------------------------------------------------------------------
+resource "azurerm_private_dns_zone" "cognitiveservices" {
+  name                = "privatelink.openai.azure.us"
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+resource "azurerm_private_dns_zone" "blob" {
+  name                = "privatelink.blob.core.usgovcloudapi.net"
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "cognitiveservices" {
+  name                  = "${var.project_name}-aoai-dns-link"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.cognitiveservices.name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
+  name                  = "${var.project_name}-blob-dns-link"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.blob.name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
+}
+
+# ---------------------------------------------------------------------------
+# Private Endpoint – Azure OpenAI
+# ---------------------------------------------------------------------------
+resource "azurerm_private_endpoint" "aoai" {
+  name                = "${var.project_name}-aoai-pe"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  subnet_id           = azurerm_subnet.aoai.id
+
+  private_service_connection {
+    name                           = "${var.project_name}-aoai-psc"
+    private_connection_resource_id = azurerm_cognitive_account.aoai.id
+    subresource_names              = ["account"]
+    is_manual_connection           = false
+  }
+
+  private_dns_zone_group {
+    name                 = "aoai-dns-zone-group"
+    private_dns_zone_ids = [azurerm_private_dns_zone.cognitiveservices.id]
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Private Endpoint – Blob Storage
+# ---------------------------------------------------------------------------
+resource "azurerm_private_endpoint" "blob" {
+  name                = "${var.project_name}-blob-pe"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  subnet_id           = azurerm_subnet.storage.id
+
+  private_service_connection {
+    name                           = "${var.project_name}-blob-psc"
+    private_connection_resource_id = azurerm_storage_account.storage.id
+    subresource_names              = ["blob"]
+    is_manual_connection           = false
+  }
+
+  private_dns_zone_group {
+    name                 = "blob-dns-zone-group"
+    private_dns_zone_ids = [azurerm_private_dns_zone.blob.id]
   }
 }

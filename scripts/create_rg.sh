@@ -7,7 +7,7 @@
 #
 # Options:
 #   -g, --resource-group  Resource group name  (default: rg-byom-dev)
-#   -l, --location        Azure region         (default: eastus)
+#   -l, --location        Azure region         (default: usgovarizona)
 #   -t, --tags            Additional space-separated key=value tags
 #   -h, --help            Show this help text
 #
@@ -19,8 +19,8 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------------
-RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME:-rg-byom-dev}"
-LOCATION="${LOCATION:-eastus}"
+RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME:-rg-byom-dev-vm-images}"
+LOCATION="${LOCATION:-usgovarizona}"
 EXTRA_TAGS="${EXTRA_TAGS:-}"
 
 # ---------------------------------------------------------------------------

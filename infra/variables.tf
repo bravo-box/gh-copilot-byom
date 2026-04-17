@@ -38,6 +38,12 @@ variable "subnet_bastion_prefix" {
   default     = "10.0.3.0/27"
 }
 
+variable "subnet_storage_prefix" {
+  description = "CIDR prefix for the storage private endpoint subnet."
+  type        = string
+  default     = "10.0.4.0/24"
+}
+
 variable "vm_size" {
   description = "SKU size for the Windows Data Science VM."
   type        = string
@@ -62,16 +68,22 @@ variable "aoai_sku" {
   default     = "S0"
 }
 
-variable "gpt52_deployment_name" {
+variable "gpt51_deployment_name" {
   description = "Name to give the GPT-5.2 model deployment inside Azure OpenAI."
   type        = string
-  default     = "gpt-52"
+  default     = "gpt-51"
 }
 
-variable "gpt52_capacity" {
-  description = "Tokens-per-minute (TPM) capacity in thousands for the GPT-5.2 deployment."
+variable "gpt51_capacity" {
+  description = "Tokens-per-minute (TPM) capacity in thousands for the GPT-5.1 deployment."
   type        = number
   default     = 10
+}
+
+variable "custom_vm_image_id" {
+  description = "Resource ID of a custom managed image (built by Packer). When set, the VM uses this image instead of the marketplace DSVM image."
+  type        = string
+  default     = null
 }
 
 variable "storage_replication_type" {
