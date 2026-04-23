@@ -68,13 +68,13 @@ variable "aoai_sku" {
   default     = "S0"
 }
 
-variable "gpt51_deployment_name" {
+variable "model_deployment_name" {
   description = "Name to give the GPT-5.2 model deployment inside Azure OpenAI."
   type        = string
   default     = "gpt-51"
 }
 
-variable "gpt51_capacity" {
+variable "model_token_capacity" {
   description = "Tokens-per-minute (TPM) capacity in thousands for the GPT-5.1 deployment."
   type        = number
   default     = 10
