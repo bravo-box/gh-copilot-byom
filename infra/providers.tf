@@ -9,9 +9,9 @@ terraform {
   }
 }
 
-# Azure Government cloud – USGov Arizona is the default region
+# Configure target cloud: 'usgovernment' for Azure Government, 'public' for Azure Commercial
 provider "azurerm" {
-  environment         = "usgovernment"
+  environment         = var.azure_environment
   storage_use_azuread = true
   features {}
 }

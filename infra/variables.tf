@@ -9,9 +9,20 @@ variable "project_name" {
 }
 
 variable "location" {
-  description = "Azure Government region in which to deploy all resources."
+  description = "Azure region in which to deploy all resources (e.g. 'usgovarizona' for Azure Government, 'eastus' for Azure Commercial)."
   type        = string
   default     = "usgovarizona"
+}
+
+variable "azure_environment" {
+  description = "AzureRM provider environment. Use 'usgovernment' for Azure Government or 'public' for Azure Commercial."
+  type        = string
+  default     = "usgovernment"
+
+  validation {
+    condition     = contains(["public", "usgovernment"], var.azure_environment)
+    error_message = "azure_environment must be either 'public' (Azure Commercial) or 'usgovernment' (Azure Government)."
+  }
 }
 
 variable "vnet_address_space" {
