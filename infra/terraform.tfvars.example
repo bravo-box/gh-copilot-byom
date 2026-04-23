@@ -36,5 +36,5 @@ vm_admin_password = "CHANGE_ME_SuperSecure1!"   # must meet Azure complexity rul
 # vm_size                  = "Standard_DS3_v2"
 # aoai_sku                 = "S0"
 # model_deployment_name    = "gpt-52"
-# model_token_capacity           = 10
+# model_token_capacity           = 290
 # storage_replication_type = "LRS"
