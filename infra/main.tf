@@ -10,7 +10,7 @@ locals {
 # Resource Group
 # ---------------------------------------------------------------------------
 resource "azurerm_resource_group" "rg" {
-  name     = "${var.project_name}"
+  name     = var.project_name
   location = var.location
 }
 
@@ -219,7 +219,7 @@ resource "azurerm_cognitive_account" "aoai" {
 }
 
 resource "azurerm_cognitive_deployment" "gpt51" {
-  name                 = var.gpt51_deployment_name
+  name                 = var.model_deployment_name
   cognitive_account_id = azurerm_cognitive_account.aoai.id
 
   model {
@@ -230,7 +230,7 @@ resource "azurerm_cognitive_deployment" "gpt51" {
 
   scale {
     type     = "DataZoneStandard"
-    capacity = var.gpt51_capacity
+    capacity = var.model_token_capacity
   }
 }
 

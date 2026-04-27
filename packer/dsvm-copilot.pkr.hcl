@@ -160,6 +160,28 @@ build {
     ]
   }
 
+  # Install PowerShell Core for all users
+  provisioner "powershell" {
+    inline = [
+      "Write-Host '>>> Installing PowerShell Core...'",
+      "choco install powershell-core",
+      "$Env:Path = [System.Environment]::GetEnvironmentVariable('Path', 'Machine')",
+      "Write-Host \"  pwsh at: $(where.exe pwsh)\"",
+      "Write-Host \"  pwsh version: $(pwsh -Version)\"",
+      "",
+      "# Configure PowerShell Core profile for all users",
+      "Write-Host '>>> Configuring PowerShell Core for all users...'",
+      "$pwshProfileDir = 'C:\\Program Files\\PowerShell\\7\\profile.ps1'",
+      "if (Test-Path $pwshProfileDir) {",
+      "  Write-Host \"  PowerShell Core profile already exists at: $pwshProfileDir\"",
+      "} else {",
+      "  Write-Host \"  Creating PowerShell Core profile for all users...\"",
+      "  New-Item -ItemType File -Path $pwshProfileDir -Force | Out-Null",
+      "  Write-Host \"  PowerShell Core profile created at: $pwshProfileDir\"",
+      "}",
+    ]
+  }
+
   # Configure VS Code to use Git Bash as the default terminal
   # Write to both the current user and the Default User profile so new
   # users created after Sysprep inherit the setting automatically.
