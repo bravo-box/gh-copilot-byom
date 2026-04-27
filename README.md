@@ -43,9 +43,21 @@ A starter repository that provisions an isolated Azure environment for using **B
 
 - [Terraform ≥ 1.5](https://developer.hashicorp.com/terraform/downloads)
 - [Packer ≥ 1.15.1](https://developer.hashicorp.com/packer/install)
-- [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) – logged in (`az login`)
-- An Azure subscription with **Contributor** rights
+- [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) – logged in (`az login` or `az login --use-device-code` for Government)
+- An Azure subscription with **Contributor** rights (Azure Commercial or Azure Government)
 - GPT-51 quota in your target region (request via [Azure OpenAI Studio](https://oai.azure.com/))
+
+## Cloud environment support
+
+All scripts and Terraform templates support both **Azure Commercial** (`AzureCloud`) and **Azure Government** (`AzureUSGovernment`).  
+The default is **Azure Government** to maintain backward compatibility.
+
+| Cloud | CLI flag | Terraform `azure_environment` | Default location |
+|---|---|---|---|
+| Azure Government | `--cloud AzureUSGovernment` | `usgovernment` | `usgovarizona` |
+| Azure Commercial | `--cloud AzureCloud` | `public` | `eastus` |
+
+Each script calls `az cloud set --name <cloud>` automatically before checking authentication, so you can switch clouds without running it manually.
 
 ## VS Code Tasks
 
@@ -54,10 +66,14 @@ This repo includes pre-configured VS Code tasks (`.vscode/tasks.json`) so you ca
 | Task | Description |
 |---|---|
 | **Terraform: Create tfvars file** | Copies `terraform.tfvars.example` → `terraform.tfvars` |
-| **Packer: Build Image** | Runs `build-image.sh` (prompts for the WinRM password) **NOTE: This can take up to 10 minutes to run.** |
-| **Terraform: Deploy - Plan** | Runs `deploy.sh -a plan` |
-| **Terraform: Deploy - Apply** | Runs `deploy.sh -a apply` |
-| **Terraform: Deploy - Destroy** | Runs `deploy.sh -a destroy` |
+| **Packer: Build Image [Azure Government]** | Runs `build-image.sh --cloud AzureUSGovernment` (prompts for the WinRM password) **NOTE: This can take up to 10 minutes to run.** |
+| **Packer: Build Image [Azure Commercial]** | Runs `build-image.sh --cloud AzureCloud` (prompts for the WinRM password) **NOTE: This can take up to 10 minutes to run.** |
+| **Terraform: Deploy - Plan [Azure Government]** | Runs `deploy.sh --cloud AzureUSGovernment -a plan` |
+| **Terraform: Deploy - Plan [Azure Commercial]** | Runs `deploy.sh --cloud AzureCloud -a plan` |
+| **Terraform: Deploy - Apply [Azure Government]** | Runs `deploy.sh --cloud AzureUSGovernment -a apply` |
+| **Terraform: Deploy - Apply [Azure Commercial]** | Runs `deploy.sh --cloud AzureCloud -a apply` |
+| **Terraform: Deploy - Destroy [Azure Government]** | Runs `deploy.sh --cloud AzureUSGovernment -a destroy` |
+| **Terraform: Deploy - Destroy [Azure Commercial]** | Runs `deploy.sh --cloud AzureCloud -a destroy` |
 
 ## Quick start
 
@@ -75,31 +91,42 @@ Currently we need to have a vm image with the following installed:
 The `build-image.sh` wrapper script handles `packer init`, `validate`, and `build` for you, with logging and pre-flight checks.
 
 ```bash
-# Using defaults (rg-byom-dev, usgovarizona, dsvm-copilot-image)
-./scripts/build-image.sh
+# Azure Government (default)
+./scripts/build-image.sh --cloud AzureUSGovernment
+
+# Azure Commercial
+./scripts/build-image.sh --cloud AzureCloud -l eastus
 
 # Prompted for WinRM password, or pass it explicitly
 ./scripts/build-image.sh -p "YourP@ssw0rd!"
 
 # Custom resource group, location, and image name
 ./scripts/build-image.sh \
+  --cloud AzureUSGovernment \
   -g rg-byom-prod \
   -l usgovarizona \
   -n my-custom-image \
   -p "YourP@ssw0rd!"
 
 # Enable debug logging
-./scripts/build-image.sh --debug -p "YourP@ssw0rd!"
+./scripts/build-image.sh --cloud AzureUSGovernment --debug -p "YourP@ssw0rd!"
 ```
 
 You can also set defaults via environment variables instead of flags:
 
 ```bash
+# Azure Government
+export AZURE_CLOUD=AzureUSGovernment
 export RESOURCE_GROUP_NAME=rg-byom-dev
 export LOCATION=usgovarizona
 export IMAGE_NAME=dsvm-copilot-image
 export VM_SIZE=Standard_DS3_v2
 export COMMUNICATOR_PASSWORD="YourP@ssw0rd!"
+./scripts/build-image.sh
+
+# Azure Commercial
+export AZURE_CLOUD=AzureCloud
+export LOCATION=eastus
 ./scripts/build-image.sh
 ```
 
@@ -110,20 +137,28 @@ Build logs are saved to `packer/logs/`.
 ```bash
 cp infra/terraform.tfvars.example infra/terraform.tfvars
 # Edit infra/terraform.tfvars – at minimum set:
-#   resource_group_name
+#   project_name
+#   azure_environment  (usgovernment or public)
+#   location           (e.g. usgovarizona or eastus)
 ```
 
 ### 3 – Plan & apply
 
 ```bash
-# Preview changes
-./scripts/deploy.sh -f infra/terraform.tfvars -a plan
+# Azure Government – preview changes
+./scripts/deploy.sh --cloud AzureUSGovernment -f infra/terraform.tfvars -a plan
 
-# Deploy
-./scripts/deploy.sh -f infra/terraform.tfvars
+# Azure Government – deploy
+./scripts/deploy.sh --cloud AzureUSGovernment -f infra/terraform.tfvars
+
+# Azure Commercial – preview changes
+./scripts/deploy.sh --cloud AzureCloud -f infra/terraform.tfvars -a plan
+
+# Azure Commercial – deploy
+./scripts/deploy.sh --cloud AzureCloud -f infra/terraform.tfvars
 
 # Unattended deploy (CI)
-AUTO_APPROVE=true ./scripts/deploy.sh -f infra/terraform.tfvars
+AUTO_APPROVE=true ./scripts/deploy.sh --cloud AzureUSGovernment -f infra/terraform.tfvars
 ```
 
 ### 4 – Connect to the Data Science VM
@@ -150,7 +185,11 @@ vnet_id = "/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.Netwo
 ### 6 – Tear down
 
 ```bash
-./scripts/deploy.sh -f infra/terraform.tfvars -a destroy
+# Azure Government
+./scripts/deploy.sh --cloud AzureUSGovernment -f infra/terraform.tfvars -a destroy
+
+# Azure Commercial
+./scripts/deploy.sh --cloud AzureCloud -f infra/terraform.tfvars -a destroy
 ```
 
 # Installing GitHub Copilot CLI

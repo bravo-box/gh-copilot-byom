@@ -11,8 +11,20 @@
 #     --offer     dsvm-win-2022 \
 #     --plan      winserver-2022
 #
-# For Azure Government auth, ensure the following env vars are set:
+# -----------------------------------------------------------------------
+# Cloud environment selection
+# -----------------------------------------------------------------------
+# Azure Government (default):
 #   export ARM_ENVIRONMENT=usgovernment
+#   az cloud set --name AzureUSGovernment
+#   ./scripts/deploy.sh --cloud AzureUSGovernment -f infra/terraform.tfvars
+#
+# Azure Commercial:
+#   export ARM_ENVIRONMENT=public
+#   az cloud set --name AzureCloud
+#   ./scripts/deploy.sh --cloud AzureCloud -f infra/terraform.tfvars
+#
+# Alternatively, ensure the following env vars are set for SP auth:
 #   export ARM_SUBSCRIPTION_ID=<your-subscription-id>
 #   export ARM_TENANT_ID=<your-tenant-id>
 #   export ARM_CLIENT_ID=<your-service-principal-app-id>       # if using SP
@@ -22,7 +34,12 @@
 # Required – lowercase letters, numbers, and hyphens only (no spaces)
 project_name = "myproject"
 
-# Optional – defaults to usgovarizona
+# Cloud environment: 'usgovernment' (Azure Government) or 'public' (Azure Commercial)
+# Defaults to 'usgovernment' if not set.
+# azure_environment = "usgovernment"
+
+# Region – defaults to usgovarizona for Azure Government.
+# For Azure Commercial, use a standard region such as eastus.
 # location = "usgovarizona"
 
 # Windows Data Science VM credentials

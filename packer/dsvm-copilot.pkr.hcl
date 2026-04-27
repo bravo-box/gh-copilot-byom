@@ -21,6 +21,12 @@ packer {
 # ---------------------------------------------------------------------------
 # Variables
 # ---------------------------------------------------------------------------
+variable "cloud_environment" {
+  type        = string
+  default     = "USGovernment"
+  description = "Packer azure-arm cloud_environment_name. Use 'Public' for Azure Commercial or 'USGovernment' for Azure Government."
+}
+
 variable "location" {
   type        = string
   default     = "usgovarizona"
@@ -62,7 +68,7 @@ variable "communicator_password" {
 # ---------------------------------------------------------------------------
 source "azure-arm" "dsvm" {
   use_azure_cli_auth     = true
-  cloud_environment_name = "USGovernment"
+  cloud_environment_name = var.cloud_environment
   location               = var.location
 
   # Standard Windows Server 2022 image – no plan / terms acceptance required

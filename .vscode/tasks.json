@@ -2,11 +2,36 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Packer: Build Image",
+      "label": "Packer: Build Image [Azure Government]",
       "type": "shell",
       "command": "bash",
       "args": [
         "./scripts/build-image.sh",
+        "--cloud",
+        "AzureUSGovernment",
+        "-p",
+        "${input:communicatorPassword}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Packer: Build Image [Azure Commercial]",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "./scripts/build-image.sh",
+        "--cloud",
+        "AzureCloud",
+        "-l",
+        "eastus",
         "-p",
         "${input:communicatorPassword}"
       ],
@@ -38,11 +63,13 @@
       }
     },
     {
-      "label": "Terraform: Deploy - Plan",
+      "label": "Terraform: Deploy - Plan [Azure Government]",
       "type": "shell",
       "command": "bash",
       "args": [
         "./scripts/deploy.sh",
+        "--cloud",
+        "AzureUSGovernment",
         "-f",
         "infra/terraform.tfvars",
         "-a",
@@ -59,11 +86,36 @@
       }
     },
     {
-      "label": "Terraform: Deploy - Apply",
+      "label": "Terraform: Deploy - Plan [Azure Commercial]",
       "type": "shell",
       "command": "bash",
       "args": [
         "./scripts/deploy.sh",
+        "--cloud",
+        "AzureCloud",
+        "-f",
+        "infra/terraform.tfvars",
+        "-a",
+        "plan"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Terraform: Deploy - Apply [Azure Government]",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "./scripts/deploy.sh",
+        "--cloud",
+        "AzureUSGovernment",
         "-f",
         "infra/terraform.tfvars",
         "-a",
@@ -80,11 +132,59 @@
       }
     },
     {
-      "label": "Terraform: Deploy - Destroy",
+      "label": "Terraform: Deploy - Apply [Azure Commercial]",
       "type": "shell",
       "command": "bash",
       "args": [
         "./scripts/deploy.sh",
+        "--cloud",
+        "AzureCloud",
+        "-f",
+        "infra/terraform.tfvars",
+        "-a",
+        "apply"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Terraform: Deploy - Destroy [Azure Government]",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "./scripts/deploy.sh",
+        "--cloud",
+        "AzureUSGovernment",
+        "-f",
+        "infra/terraform.tfvars",
+        "-a",
+        "destroy"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Terraform: Deploy - Destroy [Azure Commercial]",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "./scripts/deploy.sh",
+        "--cloud",
+        "AzureCloud",
         "-f",
         "infra/terraform.tfvars",
         "-a",

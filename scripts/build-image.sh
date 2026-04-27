@@ -8,6 +8,8 @@
 # Options:
 #   -g, --resource-group   Resource group for the image   (default: rg-byom-dev)
 #   -l, --location         Azure region                   (default: usgovarizona)
+#   -c, --cloud            Azure cloud environment        (default: AzureUSGovernment)
+#                            AzureCloud | AzureUSGovernment
 #   -n, --image-name       Managed image name             (default: dsvm-copilot-image)
 #   -s, --vm-size          Build VM size                  (default: Standard_DS3_v2)
 #   -p, --password         WinRM password                 (prompted if not set)
@@ -15,7 +17,7 @@
 #   -h, --help             Show this help text
 #
 # Environment variables (override defaults without passing flags):
-#   RESOURCE_GROUP_NAME, LOCATION, IMAGE_NAME, VM_SIZE, COMMUNICATOR_PASSWORD
+#   RESOURCE_GROUP_NAME, LOCATION, AZURE_CLOUD, IMAGE_NAME, VM_SIZE, COMMUNICATOR_PASSWORD
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -28,6 +30,7 @@ LOG_DIR="${SCRIPT_DIR}/../packer/logs"
 # ---------------------------------------------------------------------------
 RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME:-rg-byom-dev-vm-images}"
 LOCATION="${LOCATION:-usgovarizona}"
+AZURE_CLOUD="${AZURE_CLOUD:-AzureUSGovernment}"
 IMAGE_NAME="${IMAGE_NAME:-dsvm-copilot-image}"
 VM_SIZE="${VM_SIZE:-Standard_DS3_v2}"
 COMMUNICATOR_PASSWORD="${COMMUNICATOR_PASSWORD:-}"
@@ -81,6 +84,8 @@ while [[ $# -gt 0 ]]; do
       RESOURCE_GROUP_NAME="$2"; shift 2 ;;
     -l|--location)
       LOCATION="$2"; shift 2 ;;
+    -c|--cloud)
+      AZURE_CLOUD="$2"; shift 2 ;;
     -n|--image-name)
       IMAGE_NAME="$2"; shift 2 ;;
     -s|--vm-size)
@@ -108,6 +113,18 @@ if ! command -v az &>/dev/null; then
   err "Azure CLI (az) is not installed. See https://docs.microsoft.com/cli/azure/install-azure-cli"
   exit 1
 fi
+
+# Validate and map cloud to packer cloud_environment_name
+case "${AZURE_CLOUD}" in
+  AzureCloud)        PACKER_CLOUD_ENV="Public" ;;
+  AzureUSGovernment) PACKER_CLOUD_ENV="USGovernment" ;;
+  *)
+    err "Invalid cloud '${AZURE_CLOUD}'. Must be one of: AzureCloud, AzureUSGovernment."
+    exit 1 ;;
+esac
+
+log "Setting Azure cloud to: ${AZURE_CLOUD}"
+az cloud set --name "${AZURE_CLOUD}"
 
 if ! az account show &>/dev/null; then
   err "Not logged in to Azure CLI. Run 'az login' first."
@@ -142,6 +159,7 @@ LOG_FILE="${LOG_DIR}/packer-build-$(date -u +%Y%m%dT%H%M%SZ).log"
 # ---------------------------------------------------------------------------
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 log "Subscription       : ${SUBSCRIPTION_ID}"
+log "Cloud              : ${AZURE_CLOUD}"
 log "Resource group     : ${RESOURCE_GROUP_NAME}"
 log "Location           : ${LOCATION}"
 log "Image name         : ${IMAGE_NAME}"
@@ -166,6 +184,7 @@ log "Running: packer validate"
 if ! packer validate \
   -var "resource_group_name=${RESOURCE_GROUP_NAME}" \
   -var "location=${LOCATION}" \
+  -var "cloud_environment=${PACKER_CLOUD_ENV}" \
   -var "image_name=${IMAGE_NAME}" \
   -var "vm_size=${VM_SIZE}" \
   -var "communicator_password=${COMMUNICATOR_PASSWORD}" \
@@ -193,6 +212,7 @@ env "${PACKER_ENV[@]+"${PACKER_ENV[@]}"}" \
     -color=true \
     -var "resource_group_name=${RESOURCE_GROUP_NAME}" \
     -var "location=${LOCATION}" \
+    -var "cloud_environment=${PACKER_CLOUD_ENV}" \
     -var "image_name=${IMAGE_NAME}" \
     -var "vm_size=${VM_SIZE}" \
     -var "communicator_password=${COMMUNICATOR_PASSWORD}" \

@@ -6,15 +6,17 @@
 #   ./deploy.sh [options]
 #
 # Options:
-#   -g, --resource-group  Resource group name        (default: rg-byom-dev)
-#   -l, --location        Azure region               (default: usgovarizona)
+#   -g, --resource-group  Resource group name                   (default: rg-byom-dev)
+#   -l, --location        Azure region                          (default: usgovarizona)
+#   -c, --cloud           Azure cloud environment               (default: AzureUSGovernment)
+#                           AzureCloud | AzureUSGovernment
 #   -f, --vars-file       Path to a .tfvars file
-#   -a, --action          plan | apply | destroy     (default: apply)
+#   -a, --action          plan | apply | destroy                (default: apply)
 #       --auto-approve    Skip interactive confirmation
 #   -h, --help            Show this help text
 #
 # Environment variables (override defaults without passing flags):
-#   RESOURCE_GROUP_NAME, LOCATION, TF_VARS_FILE, ACTION, AUTO_APPROVE
+#   RESOURCE_GROUP_NAME, LOCATION, AZURE_CLOUD, TF_VARS_FILE, ACTION, AUTO_APPROVE
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -26,6 +28,7 @@ INFRA_DIR="${SCRIPT_DIR}/../infra"
 # ---------------------------------------------------------------------------
 RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME:-rg-byom-dev}"
 LOCATION="${LOCATION:-usgovarizona}"
+AZURE_CLOUD="${AZURE_CLOUD:-AzureUSGovernment}"
 TF_VARS_FILE="${TF_VARS_FILE:-}"
 ACTION="${ACTION:-apply}"
 AUTO_APPROVE="${AUTO_APPROVE:-false}"
@@ -49,6 +52,8 @@ while [[ $# -gt 0 ]]; do
       RESOURCE_GROUP_NAME="$2"; shift 2 ;;
     -l|--location)
       LOCATION="$2"; shift 2 ;;
+    -c|--cloud)
+      AZURE_CLOUD="$2"; shift 2 ;;
     -f|--vars-file)
       TF_VARS_FILE="$2"; shift 2 ;;
     -a|--action)
@@ -61,6 +66,17 @@ while [[ $# -gt 0 ]]; do
       err "Unknown option: $1"; print_usage; exit 1 ;;
   esac
 done
+
+# ---------------------------------------------------------------------------
+# Validate cloud
+# ---------------------------------------------------------------------------
+case "${AZURE_CLOUD}" in
+  AzureCloud)        TF_ENVIRONMENT="public" ;;
+  AzureUSGovernment) TF_ENVIRONMENT="usgovernment" ;;
+  *)
+    err "Invalid cloud '${AZURE_CLOUD}'. Must be one of: AzureCloud, AzureUSGovernment."
+    exit 1 ;;
+esac
 
 # ---------------------------------------------------------------------------
 # Validate action
@@ -83,6 +99,9 @@ if ! command -v az &>/dev/null; then
   exit 1
 fi
 
+log "Setting Azure cloud to: ${AZURE_CLOUD}"
+az cloud set --name "${AZURE_CLOUD}"
+
 if ! az account show &>/dev/null; then
   err "Not logged in to Azure CLI. Run 'az login' first."
   exit 1
@@ -92,6 +111,7 @@ SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 log "Using subscription : ${SUBSCRIPTION_ID}"
 log "Resource group     : ${RESOURCE_GROUP_NAME}"
 log "Location           : ${LOCATION}"
+log "Cloud              : ${AZURE_CLOUD}"
 log "Action             : ${ACTION}"
 log "Infra directory    : ${INFRA_DIR}"
 
@@ -109,6 +129,7 @@ fi
 TF_ARGS+=(
   "-var=project_name=${RESOURCE_GROUP_NAME}"
   "-var=location=${LOCATION}"
+  "-var=azure_environment=${TF_ENVIRONMENT}"
 )
 
 if [[ "${AUTO_APPROVE}" == "true" && "${ACTION}" != "plan" ]]; then
