@@ -99,6 +99,25 @@
         "reveal": "always",
         "panel": "new"
       }
+    },
+    {
+      "label": "Terraform: Retrieve AOAI Values",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "./scripts/retrieve-aoai-values.sh",
+        "-f",
+        "infra/terraform.tfvars"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
     }
   ],
   "inputs": [

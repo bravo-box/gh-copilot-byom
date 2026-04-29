@@ -34,7 +34,8 @@ A starter repository that provisions an isolated Azure environment for using **B
 ├── scripts/
 │   ├── build-image.sh            # Build the Packer VM image (wrapper)
 │   ├── create_rg.sh              # Create the Azure Resource Group
-│   └── deploy.sh                 # terraform init + plan/apply/destroy
+│   ├── deploy.sh                 # terraform init + plan/apply/destroy
+│   └── retrieve-aoai-values.sh  # Retrieve Copilot env vars from an existing deployment
 └── vm-scripts/
     └── install-github-copilot-cli-windows.ps1  # Install GitHub Copilot CLI on Windows
 ```
@@ -58,6 +59,7 @@ This repo includes pre-configured VS Code tasks (`.vscode/tasks.json`) so you ca
 | **Terraform: Deploy - Plan** | Runs `deploy.sh -a plan` |
 | **Terraform: Deploy - Apply** | Runs `deploy.sh -a apply` |
 | **Terraform: Deploy - Destroy** | Runs `deploy.sh -a destroy` |
+| **Terraform: Retrieve AOAI Values** | Runs `retrieve-aoai-values.sh` to print the Copilot env vars for an existing deployment |
 
 ## Quick start
 
@@ -151,6 +153,36 @@ vnet_id = "/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.Netwo
 
 ```bash
 ./scripts/deploy.sh -f infra/terraform.tfvars -a destroy
+```
+
+### 7 – Retrieve AOAI values for an existing deployment
+
+If you need to re-fetch the GitHub Copilot environment variables from an already-deployed environment (e.g. on a new terminal session or a different machine), use the `retrieve-aoai-values.sh` script:
+
+```bash
+# Using defaults (resource group: rg-byom-dev, location: usgovarizona)
+./scripts/retrieve-aoai-values.sh
+
+# Specify a resource group and vars file
+./scripts/retrieve-aoai-values.sh -g my-resource-group -f infra/terraform.tfvars
+```
+
+The script connects to the existing Terraform state, reads the Azure OpenAI endpoint, API key, and model deployment name, then prints the `export` commands ready to paste into your terminal:
+
+```text
+# -----------------------------------------------------------------------
+# GitHub Copilot BYOM – paste these into your bash terminal
+# -----------------------------------------------------------------------
+export COPILOT_PROVIDER_BASE_URL=https://<your-aoai-resource>.openai.azure.us/
+export COPILOT_PROVIDER_TYPE=azure
+export COPILOT_PROVIDER_API_KEY=<your-key>
+export COPILOT_MODEL=gpt-51
+export COPILOT_WIRE_MODEL=gpt-51
+export COPILOT_OFFLINE=true
+export COPILOT_PROVIDER_MAX_PROMPT_TOKENS=128000
+export COPILOT_PROVIDER_MAX_OUTPUT_TOKENS=4096
+export COPILOT_PROVIDER_WIRE_API=responses
+# -----------------------------------------------------------------------
 ```
 
 # Installing GitHub Copilot CLI
