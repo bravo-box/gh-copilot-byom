@@ -57,6 +57,11 @@ variable "communicator_password" {
   description = "WinRM admin password for the build VM."
 }
 
+variable "aoai_endpoint_url" {
+  type        = string
+  description = "Azure OpenAI responses API URL to bake into the chatLanguageModels.json (e.g. https://my-foundry.cognitiveservices.azure.us/openai/responses?api-version=2025-04-01-preview)."
+}
+
 # ---------------------------------------------------------------------------
 # Source – Plain Windows Server 2022 Datacenter (no marketplace plan needed)
 # ---------------------------------------------------------------------------
@@ -216,6 +221,71 @@ build {
 #       "Write-Host '>>> Extensions installed.'",
 #     ]
 #   }
+
+  # Write chatLanguageModels.json for VS Code BYOM (Bring Your Own Model)
+  provisioner "powershell" {
+    inline = [
+      "Write-Host '>>> Configuring VS Code chatLanguageModels.json (BYOM)...'",
+      "$chatModelsJson = @'",
+      "[",
+      "  {",
+      "    \"name\": \"Azure Government\",",
+      "    \"vendor\": \"azure\",",
+      "    \"apiKey\": \"<your-AOAI-API-key-here>\",",
+      "    \"models\": [",
+      "      {",
+      "        \"id\": \"gpt-5.1\",",
+      "        \"name\": \"GPT 5.1 (Gov Direct Key)\",",
+      "        \"url\": \"${var.aoai_endpoint_url}\",",
+      "        \"toolCalling\": true,",
+      "        \"vision\": true,",
+      "        \"thinking\": true,",
+      "        \"supportsReasoningEffort\": [\"none\", \"low\", \"medium\", \"high\"],",
+      "        \"reasoningEffortFormat\": \"responses\",",
+      "        \"maxInputTokens\": 272000,",
+      "        \"maxOutputTokens\": 128000",
+      "      },",
+      "      {",
+      "        \"id\": \"gpt-4.1\",",
+      "        \"name\": \"GPT 4.1 (Gov Direct Key)\",",
+      "        \"url\": \"${var.aoai_endpoint_url}\",",
+      "        \"toolCalling\": true,",
+      "        \"vision\": true,",
+      "        \"maxInputTokens\": 128000,",
+      "        \"maxOutputTokens\": 32768",
+      "      },",
+      "      {",
+      "        \"id\": \"gpt-4.1-mini\",",
+      "        \"name\": \"GPT 4.1 Mini (Gov Direct Key)\",",
+      "        \"url\": \"${var.aoai_endpoint_url}\",",
+      "        \"toolCalling\": true,",
+      "        \"vision\": true,",
+      "        \"maxInputTokens\": 128000,",
+      "        \"maxOutputTokens\": 32768",
+      "      }",
+      "    ],",
+      "    \"settings\": {",
+      "      \"gpt-5.1\": {",
+      "        \"reasoningEffort\": \"high\"",
+      "      }",
+      "    }",
+      "  }",
+      "]",
+      "'@",
+      "",
+      "# Current build user",
+      "$currentDir = \"$Env:APPDATA\\Code\\User\"",
+      "New-Item -ItemType Directory -Path $currentDir -Force | Out-Null",
+      "Set-Content -Path \"$currentDir\\chatLanguageModels.json\" -Value $chatModelsJson -Encoding UTF8",
+      "Write-Host \">>> Written to $currentDir\\chatLanguageModels.json\"",
+      "",
+      "# Default User profile (inherited by all new users after Sysprep)",
+      "$defaultDir = 'C:\\Users\\Default\\AppData\\Roaming\\Code\\User'",
+      "New-Item -ItemType Directory -Path $defaultDir -Force | Out-Null",
+      "Set-Content -Path \"$defaultDir\\chatLanguageModels.json\" -Value $chatModelsJson -Encoding UTF8",
+      "Write-Host \">>> Written to $defaultDir\\chatLanguageModels.json\"",
+    ]
+  }
 
   # Install GitHub Copilot CLI
   provisioner "powershell" {

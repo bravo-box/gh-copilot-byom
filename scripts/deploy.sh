@@ -132,6 +132,7 @@ if [[ "${ACTION}" == "apply" ]]; then
   AOAI_ENDPOINT=$(terraform output -raw aoai_endpoint)
   AOAI_KEY=$(terraform output -raw aoai_primary_key)
   AOAI_DEPLOYMENT=$(terraform output -raw aoai_deployment_name)
+  AOAI_RESPONSES_URL=$(terraform output -raw aoai_responses_url)
 
   echo ""
   echo "# -----------------------------------------------------------------------"
@@ -146,6 +147,10 @@ if [[ "${ACTION}" == "apply" ]]; then
   echo "export COPILOT_PROVIDER_MAX_PROMPT_TOKENS=128000"
   echo "export COPILOT_PROVIDER_MAX_OUTPUT_TOKENS=4096"
   echo "export COPILOT_PROVIDER_WIRE_API=responses"
+  echo "# -----------------------------------------------------------------------"
+  echo ""
+  echo "# Azure OpenAI Responses URL (for Packer BYOM image build):"
+  echo "export AOAI_ENDPOINT_URL=${AOAI_RESPONSES_URL}"
   echo "# -----------------------------------------------------------------------"
   echo "To save this configuration file, run 'source ~/.bashrc'"
 fi

@@ -38,3 +38,6 @@ vm_admin_password = "CHANGE_ME_SuperSecure1!"   # must meet Azure complexity rul
 # model_deployment_name    = "gpt-52"
 # model_token_capacity           = 290
 # storage_replication_type = "LRS"
+
+# Set to false for infra-only deploy (before building Packer image), then true to create VM
+# deploy_vm = false

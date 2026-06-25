@@ -35,17 +35,17 @@ output "subnet_bastion_id" {
 
 output "bastion_public_ip" {
   description = "Public IP address of the Azure Bastion host."
-  value       = azurerm_public_ip.bastion.ip_address
+  value       = var.deploy_vm ? azurerm_public_ip.bastion[0].ip_address : null
 }
 
 output "vm_id" {
   description = "Resource ID of the Windows Data Science VM."
-  value       = azurerm_windows_virtual_machine.vm.id
+  value       = var.deploy_vm ? azurerm_windows_virtual_machine.vm[0].id : null
 }
 
 output "vm_private_ip" {
   description = "Private IP address of the Windows Data Science VM."
-  value       = azurerm_network_interface.vm.private_ip_address
+  value       = var.deploy_vm ? azurerm_network_interface.vm[0].private_ip_address : null
 }
 
 output "aoai_id" {
@@ -82,4 +82,9 @@ output "storage_account_id" {
 output "storage_primary_blob_endpoint" {
   description = "Primary blob endpoint of the storage account."
   value       = azurerm_storage_account.storage.primary_blob_endpoint
+}
+
+output "aoai_responses_url" {
+  description = "Full Azure OpenAI responses API URL for use in chatLanguageModels.json (Packer BYOM configuration)."
+  value       = "${azurerm_cognitive_account.aoai.endpoint}openai/responses?api-version=2025-04-01-preview"
 }

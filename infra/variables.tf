@@ -57,9 +57,10 @@ variable "vm_admin_username" {
 }
 
 variable "vm_admin_password" {
-  description = "Local administrator password for the Windows Data Science VM. Must meet Azure complexity requirements."
+  description = "Local administrator password for the Windows Data Science VM. Must meet Azure complexity requirements. Required when deploy_vm is true."
   type        = string
   sensitive   = true
+  default     = ""
 }
 
 variable "aoai_sku" {
@@ -90,4 +91,10 @@ variable "storage_replication_type" {
   description = "Replication type for the storage account (LRS, ZRS, GRS, etc.)."
   type        = string
   default     = "LRS"
+}
+
+variable "deploy_vm" {
+  description = "Whether to deploy the development VM and Bastion. Set to false for infra-only deploys (e.g. before building the Packer image), then set to true to create the VM with the custom image."
+  type        = bool
+  default     = true
 }
