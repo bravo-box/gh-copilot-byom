@@ -8,8 +8,19 @@ variable "project_name" {
   }
 }
 
+variable "azure_environment" {
+  description = "Azure cloud environment to deploy into. Use 'usgovernment' for Azure Government or 'public' for Azure Commercial."
+  type        = string
+  default     = "usgovernment"
+
+  validation {
+    condition     = contains(["usgovernment", "public"], var.azure_environment)
+    error_message = "azure_environment must be either 'usgovernment' or 'public'."
+  }
+}
+
 variable "location" {
-  description = "Azure Government region in which to deploy all resources."
+  description = "Azure region in which to deploy all resources."
   type        = string
   default     = "usgovarizona"
 }

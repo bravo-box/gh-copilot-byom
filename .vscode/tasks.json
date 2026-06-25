@@ -7,6 +7,8 @@
       "command": "bash",
       "args": [
         "./scripts/build-image.sh",
+        "-c",
+        "${input:azureCloud}",
         "-p",
         "${input:communicatorPassword}"
       ],
@@ -43,6 +45,8 @@
       "command": "bash",
       "args": [
         "./scripts/deploy.sh",
+        "-c",
+        "${input:azureCloud}",
         "-f",
         "infra/terraform.tfvars",
         "-a",
@@ -64,6 +68,8 @@
       "command": "bash",
       "args": [
         "./scripts/deploy.sh",
+        "-c",
+        "${input:azureCloud}",
         "-f",
         "infra/terraform.tfvars",
         "-a",
@@ -85,6 +91,8 @@
       "command": "bash",
       "args": [
         "./scripts/deploy.sh",
+        "-c",
+        "${input:azureCloud}",
         "-f",
         "infra/terraform.tfvars",
         "-a",
@@ -106,6 +114,8 @@
       "command": "bash",
       "args": [
         "./scripts/retrieve-aoai-values.sh",
+        "-c",
+        "${input:azureCloud}",
         "-f",
         "infra/terraform.tfvars"
       ],
@@ -121,6 +131,16 @@
     }
   ],
   "inputs": [
+    {
+      "id": "azureCloud",
+      "type": "pickString",
+      "description": "Azure cloud environment to deploy into",
+      "options": [
+        "AzureUSGovernment",
+        "AzureCloud"
+      ],
+      "default": "AzureUSGovernment"
+    },
     {
       "id": "communicatorPassword",
       "type": "promptString",
