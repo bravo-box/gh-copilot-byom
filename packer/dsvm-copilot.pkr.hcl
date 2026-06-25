@@ -45,6 +45,17 @@ variable "vm_size" {
   description = "VM size used during the build."
 }
 
+variable "cloud_environment_name" {
+  type        = string
+  default     = "USGovernment"
+  description = "Azure cloud environment for Packer. Use 'USGovernment' for Azure Government or 'Public' for Azure Commercial."
+
+  validation {
+    condition     = contains(["USGovernment", "Public"], var.cloud_environment_name)
+    error_message = "cloud_environment_name must be either 'USGovernment' or 'Public'."
+  }
+}
+
 variable "communicator_username" {
   type        = string
   default     = "dsadmin"
@@ -62,7 +73,7 @@ variable "communicator_password" {
 # ---------------------------------------------------------------------------
 source "azure-arm" "dsvm" {
   use_azure_cli_auth     = true
-  cloud_environment_name = "USGovernment"
+  cloud_environment_name = var.cloud_environment_name
   location               = var.location
 
   # Standard Windows Server 2022 image – no plan / terms acceptance required

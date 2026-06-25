@@ -17,12 +17,22 @@
 #   export ARM_TENANT_ID=<your-tenant-id>
 #   export ARM_CLIENT_ID=<your-service-principal-app-id>       # if using SP
 #   export ARM_CLIENT_SECRET=<your-service-principal-secret>   # if using SP
+#
+# For Azure Commercial auth, use:
+#   export ARM_ENVIRONMENT=public
+#   export ARM_SUBSCRIPTION_ID=<your-subscription-id>
+#   export ARM_TENANT_ID=<your-tenant-id>
+#   export ARM_CLIENT_ID=<your-service-principal-app-id>       # if using SP
+#   export ARM_CLIENT_SECRET=<your-service-principal-secret>   # if using SP
 # -----------------------------------------------------------------------
 
 # Required – lowercase letters, numbers, and hyphens only (no spaces)
 project_name = "myproject"
 
-# Optional – defaults to usgovarizona
+# Azure cloud environment – "usgovernment" for Azure Government, "public" for Azure Commercial
+# azure_environment = "usgovernment"
+
+# Optional – defaults to usgovarizona (use a commercial region like "eastus" when azure_environment = "public")
 # location = "usgovarizona"
 
 # Windows Data Science VM credentials

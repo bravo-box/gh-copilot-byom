@@ -8,11 +8,13 @@
 # Options:
 #   -g, --resource-group  Resource group name  (default: rg-byom-dev)
 #   -l, --location        Azure region         (default: usgovarizona)
+#   -c, --cloud           Cloud environment    (default: AzureUSGovernment)
+#                         Valid: AzureCloud, AzureUSGovernment
 #   -t, --tags            Additional space-separated key=value tags
 #   -h, --help            Show this help text
 #
 # Environment variables (override defaults without passing flags):
-#   RESOURCE_GROUP_NAME, LOCATION
+#   RESOURCE_GROUP_NAME, LOCATION, AZURE_CLOUD
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -21,6 +23,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME:-rg-byom-dev-vm-images}"
 LOCATION="${LOCATION:-usgovarizona}"
+AZURE_CLOUD="${AZURE_CLOUD:-AzureUSGovernment}"
 EXTRA_TAGS="${EXTRA_TAGS:-}"
 
 # ---------------------------------------------------------------------------
@@ -42,6 +45,8 @@ while [[ $# -gt 0 ]]; do
       RESOURCE_GROUP_NAME="$2"; shift 2 ;;
     -l|--location)
       LOCATION="$2"; shift 2 ;;
+    -c|--cloud)
+      AZURE_CLOUD="$2"; shift 2 ;;
     -t|--tags)
       EXTRA_TAGS="$2"; shift 2 ;;
     -h|--help)
@@ -64,8 +69,23 @@ if ! az account show &>/dev/null; then
   exit 1
 fi
 
+# Validate and set the Azure CLI cloud environment
+case "${AZURE_CLOUD}" in
+  AzureCloud|AzureUSGovernment) ;;
+  *)
+    err "Invalid cloud '${AZURE_CLOUD}'. Must be one of: AzureCloud, AzureUSGovernment."
+    exit 1 ;;
+esac
+
+CURRENT_CLOUD=$(az cloud show --query name -o tsv 2>/dev/null)
+if [[ "${CURRENT_CLOUD}" != "${AZURE_CLOUD}" ]]; then
+  log "Switching Azure CLI cloud to ${AZURE_CLOUD}..."
+  az cloud set --name "${AZURE_CLOUD}"
+fi
+
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 log "Using subscription: ${SUBSCRIPTION_ID}"
+log "Cloud environment : ${AZURE_CLOUD}"
 
 # ---------------------------------------------------------------------------
 # Create (or confirm existence of) the resource group

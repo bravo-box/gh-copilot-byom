@@ -4,6 +4,10 @@ locals {
 
   # Windows computer names are limited to 15 characters
   vm_computer_name = substr(replace(var.project_name, "-", ""), 0, 15)
+
+  # Private DNS zone names differ between Azure Government and Azure Commercial
+  dns_zone_cognitiveservices = var.azure_environment == "usgovernment" ? "privatelink.openai.azure.us" : "privatelink.openai.azure.com"
+  dns_zone_blob             = var.azure_environment == "usgovernment" ? "privatelink.blob.core.usgovcloudapi.net" : "privatelink.blob.core.windows.net"
 }
 
 # ---------------------------------------------------------------------------
@@ -270,15 +274,15 @@ resource "azurerm_role_assignment" "storage_blob_contributor" {
 }
 
 # ---------------------------------------------------------------------------
-# Private DNS Zones (Azure Government endpoints)
+# Private DNS Zones (environment-specific endpoints)
 # ---------------------------------------------------------------------------
 resource "azurerm_private_dns_zone" "cognitiveservices" {
-  name                = "privatelink.openai.azure.us"
+  name                = local.dns_zone_cognitiveservices
   resource_group_name = azurerm_resource_group.rg.name
 }
 
 resource "azurerm_private_dns_zone" "blob" {
-  name                = "privatelink.blob.core.usgovcloudapi.net"
+  name                = local.dns_zone_blob
   resource_group_name = azurerm_resource_group.rg.name
 }
 

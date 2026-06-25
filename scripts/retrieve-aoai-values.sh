@@ -9,11 +9,13 @@
 # Options:
 #   -g, --resource-group  Resource group / project name  (default: rg-byom-dev)
 #   -l, --location        Azure region                   (default: usgovarizona)
+#   -c, --cloud           Cloud environment              (default: AzureUSGovernment)
+#                         Valid: AzureCloud, AzureUSGovernment
 #   -f, --vars-file       Path to a .tfvars file
 #   -h, --help            Show this help text
 #
 # Environment variables (override defaults without passing flags):
-#   RESOURCE_GROUP_NAME, LOCATION, TF_VARS_FILE
+#   RESOURCE_GROUP_NAME, LOCATION, AZURE_CLOUD, TF_VARS_FILE
 #
 # The script reads the Terraform state for an existing deployment and prints
 # the 'export' commands needed to configure the GitHub Copilot CLI in your
@@ -29,6 +31,7 @@ INFRA_DIR="${SCRIPT_DIR}/../infra"
 # ---------------------------------------------------------------------------
 RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME:-rg-byom-dev}"
 LOCATION="${LOCATION:-usgovarizona}"
+AZURE_CLOUD="${AZURE_CLOUD:-AzureUSGovernment}"
 TF_VARS_FILE="${TF_VARS_FILE:-}"
 
 # ---------------------------------------------------------------------------
@@ -50,6 +53,8 @@ while [[ $# -gt 0 ]]; do
       RESOURCE_GROUP_NAME="$2"; shift 2 ;;
     -l|--location)
       LOCATION="$2"; shift 2 ;;
+    -c|--cloud)
+      AZURE_CLOUD="$2"; shift 2 ;;
     -f|--vars-file)
       TF_VARS_FILE="$2"; shift 2 ;;
     -h|--help)
@@ -77,8 +82,26 @@ if ! az account show &>/dev/null; then
   exit 1
 fi
 
+# Validate and map cloud environment
+case "${AZURE_CLOUD}" in
+  AzureCloud)
+    TF_ENVIRONMENT="public" ;;
+  AzureUSGovernment)
+    TF_ENVIRONMENT="usgovernment" ;;
+  *)
+    err "Invalid cloud '${AZURE_CLOUD}'. Must be one of: AzureCloud, AzureUSGovernment."
+    exit 1 ;;
+esac
+
+CURRENT_CLOUD=$(az cloud show --query name -o tsv 2>/dev/null)
+if [[ "${CURRENT_CLOUD}" != "${AZURE_CLOUD}" ]]; then
+  log "Switching Azure CLI cloud to ${AZURE_CLOUD}..."
+  az cloud set --name "${AZURE_CLOUD}"
+fi
+
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 log "Using subscription : ${SUBSCRIPTION_ID}"
+log "Cloud environment  : ${AZURE_CLOUD}"
 log "Resource group     : ${RESOURCE_GROUP_NAME}"
 log "Location           : ${LOCATION}"
 log "Infra directory    : ${INFRA_DIR}"
@@ -96,6 +119,7 @@ fi
 TF_ARGS+=(
   "-var=project_name=${RESOURCE_GROUP_NAME}"
   "-var=location=${LOCATION}"
+  "-var=azure_environment=${TF_ENVIRONMENT}"
 )
 
 # ---------------------------------------------------------------------------
