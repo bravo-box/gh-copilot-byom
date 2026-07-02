@@ -2,6 +2,48 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Terraform: Create tfvars file",
+      "type": "shell",
+      "command": "cp",
+      "args": [
+        "infra/terraform.tfvars.example",
+        "infra/terraform.tfvars"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Terraform: Deploy Infra Only (no VM)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "./scripts/deploy.sh",
+        "-f",
+        "infra/terraform.tfvars",
+        "-a",
+        "apply",
+        "--auto-approve"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "TF_VAR_deploy_vm": "false"
+        }
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
       "label": "Packer: Build Image",
       "type": "shell",
       "command": "bash",
@@ -18,23 +60,6 @@
       "presentation": {
         "reveal": "always",
         "panel": "new"
-      }
-    },
-    {
-      "label": "Terraform: Create tfvars file",
-      "type": "shell",
-      "command": "cp",
-      "args": [
-        "infra/terraform.tfvars.example",
-        "infra/terraform.tfvars"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
       }
     },
     {

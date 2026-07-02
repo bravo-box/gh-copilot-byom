@@ -11,11 +11,12 @@
 #   -n, --image-name       Managed image name             (default: dsvm-copilot-image)
 #   -s, --vm-size          Build VM size                  (default: Standard_DS3_v2)
 #   -p, --password         WinRM password                 (prompted if not set)
+#   -u, --aoai-url         Azure OpenAI responses URL     (from terraform output)
 #       --debug            Enable PACKER_LOG=1
 #   -h, --help             Show this help text
 #
 # Environment variables (override defaults without passing flags):
-#   RESOURCE_GROUP_NAME, LOCATION, IMAGE_NAME, VM_SIZE, COMMUNICATOR_PASSWORD
+#   RESOURCE_GROUP_NAME, LOCATION, IMAGE_NAME, VM_SIZE, COMMUNICATOR_PASSWORD, AOAI_ENDPOINT_URL
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -31,6 +32,7 @@ LOCATION="${LOCATION:-usgovarizona}"
 IMAGE_NAME="${IMAGE_NAME:-dsvm-copilot-image}"
 VM_SIZE="${VM_SIZE:-Standard_DS3_v2}"
 COMMUNICATOR_PASSWORD="${COMMUNICATOR_PASSWORD:-}"
+AOAI_ENDPOINT_URL="${AOAI_ENDPOINT_URL:-}"
 PACKER_DEBUG="${PACKER_DEBUG:-false}"
 
 # ---------------------------------------------------------------------------
@@ -87,6 +89,8 @@ while [[ $# -gt 0 ]]; do
       VM_SIZE="$2"; shift 2 ;;
     -p|--password)
       COMMUNICATOR_PASSWORD="$2"; shift 2 ;;
+    -u|--aoai-url)
+      AOAI_ENDPOINT_URL="$2"; shift 2 ;;
     --debug)
       PACKER_DEBUG="true"; shift ;;
     -h|--help)
@@ -120,6 +124,34 @@ if [[ -z "${COMMUNICATOR_PASSWORD}" ]]; then
   echo ""
   if [[ -z "${COMMUNICATOR_PASSWORD}" ]]; then
     err "Password cannot be empty."
+    exit 1
+  fi
+fi
+
+# Retrieve AOAI URL from terraform.tfvars or terraform output if not supplied
+if [[ -z "${AOAI_ENDPOINT_URL}" ]]; then
+  log "AOAI_ENDPOINT_URL not set – attempting to retrieve from configuration..."
+  INFRA_DIR="${SCRIPT_DIR}/../infra"
+  TFVARS_FILE="${INFRA_DIR}/terraform.tfvars"
+  
+  # First, try to read from terraform.tfvars
+  if [[ -f "${TFVARS_FILE}" ]]; then
+    AOAI_ENDPOINT_URL=$(grep -oP '^aoai_endpoint\s*=\s*"\K[^"]+' "${TFVARS_FILE}" || true)
+    if [[ -n "${AOAI_ENDPOINT_URL}" ]]; then
+      log "Retrieved aoai_endpoint from ${TFVARS_FILE}"
+    fi
+  fi
+  
+  # If still not found, try terraform output
+  if [[ -z "${AOAI_ENDPOINT_URL}" && -d "${INFRA_DIR}/.terraform" ]]; then
+    AOAI_ENDPOINT_URL=$(cd "${INFRA_DIR}" && terraform output -raw aoai_responses_url 2>/dev/null || true)
+    if [[ -n "${AOAI_ENDPOINT_URL}" ]]; then
+      log "Retrieved aoai_responses_url from Terraform output"
+    fi
+  fi
+  
+  if [[ -z "${AOAI_ENDPOINT_URL}" ]]; then
+    err "AOAI_ENDPOINT_URL is required. Pass it with -u/--aoai-url, set it in terraform.tfvars, or deploy Terraform first."
     exit 1
   fi
 fi
@@ -169,6 +201,7 @@ if ! packer validate \
   -var "image_name=${IMAGE_NAME}" \
   -var "vm_size=${VM_SIZE}" \
   -var "communicator_password=${COMMUNICATOR_PASSWORD}" \
+  -var "aoai_endpoint_url=${AOAI_ENDPOINT_URL}" \
   "${PACKER_DIR}/dsvm-copilot.pkr.hcl" 2>&1 | tee -a "${LOG_FILE}"; then
   err "packer validate failed. Fix the template errors above before building."
   exit 1
@@ -196,6 +229,7 @@ env "${PACKER_ENV[@]+"${PACKER_ENV[@]}"}" \
     -var "image_name=${IMAGE_NAME}" \
     -var "vm_size=${VM_SIZE}" \
     -var "communicator_password=${COMMUNICATOR_PASSWORD}" \
+    -var "aoai_endpoint_url=${AOAI_ENDPOINT_URL}" \
     --force \
     "${PACKER_DIR}/dsvm-copilot.pkr.hcl" > >(tee -a "${LOG_FILE}") 2>&1 &
 PACKER_PID=$!

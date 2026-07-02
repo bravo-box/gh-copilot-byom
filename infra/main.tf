@@ -128,6 +128,7 @@ resource "azurerm_subnet_network_security_group_association" "vm" {
 # Azure Bastion
 # ---------------------------------------------------------------------------
 resource "azurerm_public_ip" "bastion" {
+  count               = var.deploy_vm ? 1 : 0
   name                = "${var.project_name}-bastion-pip"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -136,6 +137,7 @@ resource "azurerm_public_ip" "bastion" {
 }
 
 resource "azurerm_bastion_host" "bastion" {
+  count               = var.deploy_vm ? 1 : 0
   name                = "${var.project_name}-bastion"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -143,7 +145,7 @@ resource "azurerm_bastion_host" "bastion" {
   ip_configuration {
     name                 = "configuration"
     subnet_id            = azurerm_subnet.bastion.id
-    public_ip_address_id = azurerm_public_ip.bastion.id
+    public_ip_address_id = azurerm_public_ip.bastion[0].id
   }
 }
 
@@ -151,6 +153,7 @@ resource "azurerm_bastion_host" "bastion" {
 # Windows Data Science VM
 # ---------------------------------------------------------------------------
 resource "azurerm_network_interface" "vm" {
+  count               = var.deploy_vm ? 1 : 0
   name                = "${var.project_name}-vm-nic"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -163,6 +166,7 @@ resource "azurerm_network_interface" "vm" {
 }
 
 resource "azurerm_windows_virtual_machine" "vm" {
+  count               = var.deploy_vm ? 1 : 0
   name                = "${var.project_name}-vm"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -172,7 +176,7 @@ resource "azurerm_windows_virtual_machine" "vm" {
   computer_name       = local.vm_computer_name
 
   network_interface_ids = [
-    azurerm_network_interface.vm.id,
+    azurerm_network_interface.vm[0].id,
   ]
 
   os_disk {

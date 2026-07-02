@@ -6,17 +6,22 @@ function Install-VSC-Windows {
 
         [parameter()]
         [ValidateSet($true,$false)]
-        [string]$CreateShortCut = $true
+        [string]$CreateShortCut = $true,
+
+        [Parameter()]
+        [string]$Version = '1.122.0'
     )
 
     # Windows Version x64
     # Define the download URL and the destination
     $Destination = "$env:TEMP\vscode_installer.exe"
-    $VSCodeUrl = "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64"
+
+    # Pin to a specific VS Code version using the update API
+    $VSCodeUrl = "https://update.code.visualstudio.com/$Version/win32-x64/stable"
 
     # User Installation
     if ($Scope  -eq 'local') {
-        $VSCodeUrl = $VSCodeUrl + '-user'
+        $VSCodeUrl = "https://update.code.visualstudio.com/$Version/win32-x64-user/stable"
     }
 
     $UnattendedArgs = '/verysilent /mergetasks=!runcode'
