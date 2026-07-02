@@ -134,6 +134,22 @@ if [[ "${ACTION}" == "apply" ]]; then
   AOAI_DEPLOYMENT=$(terraform output -raw aoai_deployment_name)
   AOAI_RESPONSES_URL=$(terraform output -raw aoai_responses_url)
 
+  # Update the tfvars file with the aoai_endpoint (using the responses URL for packer)
+  if [[ -n "${TF_VARS_FILE}" && -f "${TF_VARS_FILE}" ]]; then
+    log "Updating tfvars file with aoai_endpoint..."
+    
+    # Check if aoai_endpoint already exists in the file
+    if grep -q "^aoai_endpoint" "${TF_VARS_FILE}"; then
+      # Update existing aoai_endpoint variable
+      sed -i "s|^aoai_endpoint.*|aoai_endpoint = \"${AOAI_RESPONSES_URL}\"|g" "${TF_VARS_FILE}"
+    else
+      # Append new aoai_endpoint variable
+      echo "aoai_endpoint = \"${AOAI_RESPONSES_URL}\"" >> "${TF_VARS_FILE}"
+    fi
+    
+    log "tfvars file updated successfully"
+  fi
+
   echo ""
   echo "# -----------------------------------------------------------------------"
   echo "# GitHub Copilot BYOM – paste these into your bash terminal"

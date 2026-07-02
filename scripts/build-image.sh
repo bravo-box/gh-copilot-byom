@@ -128,18 +128,32 @@ if [[ -z "${COMMUNICATOR_PASSWORD}" ]]; then
   fi
 fi
 
-# Retrieve AOAI URL from terraform output if not supplied
+# Retrieve AOAI URL from terraform.tfvars or terraform output if not supplied
 if [[ -z "${AOAI_ENDPOINT_URL}" ]]; then
-  log "AOAI_ENDPOINT_URL not set – attempting to retrieve from Terraform output..."
+  log "AOAI_ENDPOINT_URL not set – attempting to retrieve from configuration..."
   INFRA_DIR="${SCRIPT_DIR}/../infra"
-  if [[ -d "${INFRA_DIR}/.terraform" ]]; then
-    AOAI_ENDPOINT_URL=$(cd "${INFRA_DIR}" && terraform output -raw aoai_responses_url 2>/dev/null || true)
+  TFVARS_FILE="${INFRA_DIR}/terraform.tfvars"
+  
+  # First, try to read from terraform.tfvars
+  if [[ -f "${TFVARS_FILE}" ]]; then
+    AOAI_ENDPOINT_URL=$(grep -oP '^aoai_endpoint\s*=\s*"\K[^"]+' "${TFVARS_FILE}" || true)
+    if [[ -n "${AOAI_ENDPOINT_URL}" ]]; then
+      log "Retrieved aoai_endpoint from ${TFVARS_FILE}"
+    fi
   fi
+  
+  # If still not found, try terraform output
+  if [[ -z "${AOAI_ENDPOINT_URL}" && -d "${INFRA_DIR}/.terraform" ]]; then
+    AOAI_ENDPOINT_URL=$(cd "${INFRA_DIR}" && terraform output -raw aoai_responses_url 2>/dev/null || true)
+    if [[ -n "${AOAI_ENDPOINT_URL}" ]]; then
+      log "Retrieved aoai_responses_url from Terraform output"
+    fi
+  fi
+  
   if [[ -z "${AOAI_ENDPOINT_URL}" ]]; then
-    err "AOAI_ENDPOINT_URL is required. Pass it with -u/--aoai-url or deploy Terraform first."
+    err "AOAI_ENDPOINT_URL is required. Pass it with -u/--aoai-url, set it in terraform.tfvars, or deploy Terraform first."
     exit 1
   fi
-  log "Retrieved AOAI URL from Terraform: ${AOAI_ENDPOINT_URL}"
 fi
 
 # Create the resource group if it doesn't exist
